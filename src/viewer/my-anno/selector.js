@@ -9,7 +9,7 @@ export const renderAnnotation = (id, location, viewer) => {
   const $overlay = document.createElement("div");
   Object.assign($overlay, {
     id,
-    className: "my-overlay",
+    className: "anno-overlay",
   });
 
   viewer.addOverlay($overlay, location);
@@ -57,12 +57,18 @@ export const renderAnnotation = (id, location, viewer) => {
   //
   const $resizer = document.createElement("div");
   Object.assign($resizer, {
-    className: "my-overlay-resizer",
+    className: "anno-overlay-resizer",
   });
   $overlay.append($resizer);
 
   const resizerTracker = new OpenSeadragon.MouseTracker({
     element: $resizer,
+    pressHandler() {
+      $resizer.classList.add("-grabbing");
+    },
+    releaseHandler() {
+      $resizer.classList.remove("-grabbing");
+    },
     dragHandler(ev) {
       // @ts-ignore: It surely exists!!!
       const delta = viewer.viewport.deltaPointsFromPixels(ev.delta);

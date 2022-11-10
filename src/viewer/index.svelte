@@ -77,25 +77,24 @@
   :global(.my-navigator-display-region) {
     box-shadow: rgba(0, 0, 0, 0.7) 0 0 0 1000px;
   }
-  :global(.my-overlay) {
+
+  :global(.anno-overlay) {
     box-sizing: border-box;
     border: 2px solid gold;
     background-color: rgba(255, 255, 255, 0.3);
-  }
-  :global(.my-overlay:hover) {
     cursor: pointer;
   }
-  :global(.my-overlay.-grabbing) {
+  :global(.anno-overlay.-grabbing) {
     border-style: dashed;
     cursor: grabbing;
   }
-  :global(.my-overlay-resizer) {
+  :global(.anno-overlay-resizer) {
     cursor: nwse-resize;
-    background-color: white;
+    background-color: gold;
     width: 8px; /* Never scales */
     height: 8px;
     position: absolute;
-    bottom: 0;
-    right: 0;
+    bottom: -2px;
+    right: -2px;
   }
 </style>
