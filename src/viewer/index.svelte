@@ -1,10 +1,13 @@
 <script>
   import OpenSeadragon from "openseadragon";
   import { onMount } from "svelte";
-  import { install } from "./my-anno";
+  import { install as installSelector } from "./my-anno/selector";
+  import { install as installAnnotator } from "./my-anno/annotator";
 
   /** @type {string} */
   export let source;
+  /** @type {Record<string, import("./my-anno/annotator").Annotation>} */
+  export let annotations;
 
   onMount(() => {
     const viewer = new OpenSeadragon.Viewer({
@@ -19,13 +22,16 @@
       tileSources: source,
     });
 
-    // @ts-ignore
+    // @ts-ignore: To apply custom styles
     viewer.navigator.displayRegion.className = "my-navigator-display-region";
 
-    const anno = install(viewer);
+    const destorySelector = installSelector(viewer);
+    const destroyAnnotator = installAnnotator(viewer, annotations);
 
     return () => {
-      anno.destroy();
+      destorySelector();
+      destroyAnnotator();
+
       viewer.destroy();
     };
   });
