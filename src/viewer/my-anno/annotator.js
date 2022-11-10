@@ -87,6 +87,7 @@ export const install = (viewer, annotations) => {
 
   return () => {
     viewer.removeHandler("add-overlay", onViewerAddOverlay);
+    viewer.removeHandler("update-overlay", onViewerUpdateOverlay);
     viewer.removeHandler("remove-overlay", onViewerRemoveOverlay);
   };
 };
