@@ -4,6 +4,7 @@
 
   let data = new Promise(() => {});
   onMount(() => {
+    // XXX: Maybe fetch()
     data = new Promise((resolve) => {
       setTimeout(() => resolve({
         source: "http://openseadragon.github.io/example-images/highsmith/highsmith.dzi",
@@ -20,11 +21,11 @@
 
   <main>
     {#await data}
-        <p>Loading...</p>
-      {:then { source }}
-        <Viewer {source} />
-      {:catch err}
-        <p>{err.toString()}</p>
+      <p>Loading...</p>
+    {:then { source }}
+      <Viewer {source} />
+    {:catch err}
+      <p>{err.toString()}</p>
     {/await}
   </main>
 </div>

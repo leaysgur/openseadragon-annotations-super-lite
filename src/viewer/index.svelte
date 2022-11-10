@@ -28,8 +28,7 @@
 
 <div class="main">
   <div class="my-viewer" id="osd-viewer"></div>
-  <div class="my-navigator" id="osd-navigator">
-  </div>
+  <div class="my-navigator" id="osd-navigator"></div>
   <div class="my-editor">Editor</div>
 </div>
 
