@@ -1,0 +1,14 @@
+{
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    },
+    "ignore": ["dist"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "ignore": ["dist"]
+  }
+}

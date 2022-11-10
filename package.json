@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "lint": "npx rome check . --apply-suggested",
+    "format": "npx rome format . --write",
     "dev": "vite",
     "preview": "vite build && vite preview"
   },
