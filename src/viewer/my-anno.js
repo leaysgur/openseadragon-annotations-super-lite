@@ -1,57 +1,62 @@
-// @ts-check
 import OpenSeadragon from "openseadragon";
 
-// TODO: disposer
-// TODO: styling by class or data-attr
+/**
+ * @typedef {{
+ * }} MyAnnoContext
+ */
 
-/** @param {import("openseadragon").Viewer} viewer */
-export const install = (viewer) => {
-  //
-  // ADD, DELETE
-  //
-  for (const type of ["mouse", "touch", "pen", "unknown"])
-    viewer.gestureSettingsByDeviceType(type).clickToZoom = false;
-
-  viewer.addHandler("canvas-click", (ev) => {
+/** @param {MyAnnoContext} ctx */
+const handleViewerCanvasClick = (ctx) =>
+  /** @param {import("openseadragon").CanvasClickEvent} ev */
+  (ev) => {
     if (!ev.quick) return;
 
-    const oId = "o:" + Date.now();
+    ctx;
+    const viewer = ev.eventSource;
+
+    const oId = "overlay:" + Date.now();
+
     const $overlay = document.createElement("div");
-    $overlay.id = oId;
-    Object.assign($overlay.style, {
-      outline: "2px solid tomato",
-      backgroundColor: "rgba(255, 255, 255, 0.3)",
-      cursor: "move",
-      position: "relative",
+    Object.assign($overlay, {
+      id: oId,
+      className: "my-overlay",
     });
 
     const point = viewer.viewport.pointFromPixel(ev.position);
-    viewer.addOverlay($overlay, new OpenSeadragon.Rect(point.x, point.y, 0.1, 0.1));
+    viewer.addOverlay($overlay, new OpenSeadragon.Rect(point.x, point.y, 0.05, 0.05));
 
-    new OpenSeadragon.MouseTracker({
+    const overlay = viewer.getOverlayById(oId);
+    const overlayTracker = new OpenSeadragon.MouseTracker({
       element: $overlay,
       clickHandler(ev) {
         // @ts-ignore: It surely exists!!!
         if (!ev.quick) return;
 
+        // Internally calls overlay.destroy();
         viewer.removeOverlay($overlay);
+        // Need to delay until all possible events are processed
+        requestIdleCallback(() => {
+          resizerTracker.destroy();
+          overlayTracker.destroy();
+        });
       },
 
+      //
+      // DRAG
+      //
       pressHandler() {
-        $overlay.style.outlineStyle = "dashed";
+        $overlay.classList.add("-grabbing");
       },
       releaseHandler() {
-        $overlay.style.outlineStyle = "solid";
+        $overlay.classList.remove("-grabbing");
       },
       dragHandler(ev) {
         // @ts-ignore: It surely exists!!!
         const delta = viewer.viewport.deltaPointsFromPixels(ev.delta);
-        const overlay = viewer.getOverlayById(oId);
 
         const pos = overlay.getBounds(viewer.viewport);
         // @ts-ignore: It surely exists!!!
         overlay.update({ location: pos.translate(delta) });
-
         // @ts-ignore: It surely exists!!!
         overlay.drawHTML(viewer.overlaysContainer, viewer.viewport);
       },
@@ -61,24 +66,18 @@ export const install = (viewer) => {
     // RESIZE
     //
     const $resizer = document.createElement("div");
-    Object.assign($resizer.style, {
-      cursor: "nwse-resize",
-      backgroundColor: "white",
-      width: "10px", // Never scales
-      height: "10px",
-      position: "absolute",
-      bottom: "0",
-      right: "0",
+    Object.assign($resizer, {
+      className: "my-overlay-resizer",
     });
     $overlay.append($resizer);
 
-    new OpenSeadragon.MouseTracker({
+    const resizerTracker = new OpenSeadragon.MouseTracker({
       element: $resizer,
       dragHandler(ev) {
         // @ts-ignore: It surely exists!!!
         const delta = viewer.viewport.deltaPointsFromPixels(ev.delta);
-        const overlay = viewer.getOverlayById(oId);
 
+        // Resize = x, y stays same, updates w, h
         const loc = overlay.getBounds(viewer.viewport);
         loc.width = loc.width + delta.x;
         loc.height = loc.height + delta.y;
@@ -89,9 +88,23 @@ export const install = (viewer) => {
         overlay.drawHTML(viewer.overlaysContainer, viewer.viewport);
       },
     });
-  });
+  };
 
-  return () => {
-    // dispose
+/** @param {import("openseadragon").Viewer} viewer */
+export const install = (viewer) => {
+  /** @type {MyAnnoContext} */
+  const context = {};
+  const onViewerCanvasClick = handleViewerCanvasClick(context);
+
+  // Click to add overlay
+  viewer.addHandler("canvas-click", onViewerCanvasClick);
+  // Disable it for click-to-add-overlay
+  for (const type of ["mouse", "touch", "pen", "unknown"])
+    viewer.gestureSettingsByDeviceType(type).clickToZoom = false;
+
+  return {
+    destroy() {
+      viewer.removeHandler("canvas-click", onViewerCanvasClick);
+    },
   };
 };

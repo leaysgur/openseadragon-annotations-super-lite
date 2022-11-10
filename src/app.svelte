@@ -9,7 +9,7 @@
       setTimeout(() => resolve({
         source: "http://openseadragon.github.io/example-images/highsmith/highsmith.dzi",
         annotations: [],
-      }), 1000);
+      }), 500);
     });
   });
 </script>
