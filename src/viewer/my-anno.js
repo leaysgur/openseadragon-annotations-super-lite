@@ -6,15 +6,16 @@ import OpenSeadragon from "openseadragon";
  */
 
 /** @param {MyAnnoContext} ctx */
-const handleViewerCanvasClick = (ctx) =>
+const handleViewerCanvasClick =
+  (ctx) =>
   /** @param {import("openseadragon").CanvasClickEvent} ev */
   (ev) => {
-    if (!ev.quick) return;
+    if (!ev.quick) { return; }
 
     ctx;
     const viewer = ev.eventSource;
 
-    const oId = "overlay:" + Date.now();
+    const oId = `overlay:${Date.now()}`;
 
     const $overlay = document.createElement("div");
     Object.assign($overlay, {
@@ -23,14 +24,17 @@ const handleViewerCanvasClick = (ctx) =>
     });
 
     const point = viewer.viewport.pointFromPixel(ev.position);
-    viewer.addOverlay($overlay, new OpenSeadragon.Rect(point.x, point.y, 0.05, 0.05));
+    viewer.addOverlay(
+      $overlay,
+      new OpenSeadragon.Rect(point.x, point.y, 0.05, 0.05),
+    );
 
     const overlay = viewer.getOverlayById(oId);
     const overlayTracker = new OpenSeadragon.MouseTracker({
       element: $overlay,
       clickHandler(ev) {
         // @ts-ignore: It surely exists!!!
-        if (!ev.quick) return;
+        if (!ev.quick) { return; }
 
         // Internally calls overlay.destroy();
         viewer.removeOverlay($overlay);
@@ -99,8 +103,9 @@ export const install = (viewer) => {
   // Click to add overlay
   viewer.addHandler("canvas-click", onViewerCanvasClick);
   // Disable it for click-to-add-overlay
-  for (const type of ["mouse", "touch", "pen", "unknown"])
+  for (const type of ["mouse", "touch", "pen", "unknown"]) {
     viewer.gestureSettingsByDeviceType(type).clickToZoom = false;
+  }
 
   return {
     destroy() {
