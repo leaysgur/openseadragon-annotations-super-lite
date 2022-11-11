@@ -80,9 +80,7 @@
   <div class="my-viewer" id="osd-viewer"></div>
   <div class="my-navigator" id="osd-navigator"></div>
   <div class="my-editor">
-    <pre style="color: beige; white-space: pre-wrap; font-size: 0.7rem; padding: 8px;">
-      {JSON.stringify(selected, null, 2)}
-    </pre>
+    <pre style="color: beige; font-size: 0.8rem; padding: 8px;">{JSON.stringify(selected, null, 2)}</pre>
   </div>
 </div>
 
