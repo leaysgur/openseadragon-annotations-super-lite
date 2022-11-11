@@ -49,8 +49,7 @@
     grid-template:
       "viewer navigator" 200px
       "viewer editor"    1fr
-    /  1fr    300px;
-    grid-template-columns: 1fr 240px;
+    /  1fr    240px;
     gap: 8px;
     height: 100%;
     background-color: #222;
