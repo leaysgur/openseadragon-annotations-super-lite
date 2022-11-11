@@ -1,13 +1,16 @@
 <script>
   import OpenSeadragon from "openseadragon";
   import { onMount } from "svelte";
-  import { install as installSelector } from "./my-anno/selector";
-  import { install as installAnnotator } from "./my-anno/annotator";
+  import { install } from "./my-anno/index";
+  /** @typedef {import("./my-anno/annotation").AnnotationInit} AnnotationInit */
 
   /** @type {string} */
   export let source;
-  /** @type {Record<string, import("./my-anno/annotator").Annotation>} */
+  /** @type {Record<string, AnnotationInit>} */
   export let annotations;
+
+  /** @type {AnnotationInit | null} */
+  let selected = null;
 
   onMount(() => {
     const viewer = new OpenSeadragon.Viewer({
@@ -25,13 +28,49 @@
     // @ts-ignore: To apply custom styles
     viewer.navigator.displayRegion.className = "my-navigator-display-region";
 
-    const destorySelector = installSelector(viewer);
-    const destroyAnnotator = installAnnotator(viewer, annotations);
+    const { port, destory } = install(viewer, { annotations });
+
+    port.onmessage = ({ data: { type, data } }) => {
+      switch (type) {
+        case "added": {
+          annotations[data.annotation.id] = data.annotation;
+          localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
+          selected = data.annotation;
+          break;
+        }
+        case "moved": {
+          annotations[data.annotation.id] = data.annotation;
+          localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
+          if (selected?.id === data.annotation.id)
+            selected = data.annotation;
+          break;
+        }
+        case "resized": {
+          annotations[data.annotation.id] = data.annotation;
+          localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
+          if (selected?.id === data.annotation.id)
+            selected = data.annotation;
+          break;
+        }
+        case "removed": {
+          delete annotations[data.annotation.id];
+          localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
+
+          if (selected?.id === data.annotation.id)
+            selected = null;
+          break;
+        }
+        case "clicked": {
+          selected = data.annotation;
+          break;
+        }
+      }
+
+      console.log(type, annotations);
+    };
 
     return () => {
-      destorySelector();
-      destroyAnnotator();
-
+      destory();
       viewer.destroy();
     };
   });
@@ -40,7 +79,11 @@
 <div class="main">
   <div class="my-viewer" id="osd-viewer"></div>
   <div class="my-navigator" id="osd-navigator"></div>
-  <div class="my-editor">Editor</div>
+  <div class="my-editor">
+    <pre style="color: beige; white-space: pre-wrap; font-size: 0.7rem; padding: 8px;">
+      {JSON.stringify(selected, null, 2)}
+    </pre>
+  </div>
 </div>
 
 <style>
@@ -81,13 +124,13 @@
     box-sizing: border-box;
     border: 2px solid gold;
     background-color: rgba(255, 255, 255, 0.3);
-    cursor: pointer;
+    cursor: move;
   }
   :global(.anno-overlay.-grabbing) {
     border-style: dashed;
     cursor: grabbing;
   }
-  :global(.anno-overlay-resizer) {
+  :global(.anno-overlay-resize-handle) {
     cursor: nwse-resize;
     background-color: gold;
     width: 8px; /* Never scales */
@@ -95,5 +138,14 @@
     position: absolute;
     bottom: -2px;
     right: -2px;
+  }
+  :global(.anno-overlay-remove-handle) {
+    cursor: pointer;
+    background-color: tomato;
+    width: 8px; /* Never scales */
+    height: 8px;
+    position: absolute;
+    top: -2px;
+    left: -2px;
   }
 </style>
