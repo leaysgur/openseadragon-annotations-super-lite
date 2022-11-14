@@ -19,6 +19,21 @@
 
   /** @type {AnnotationItem | null} */
   let selected = null;
+  /** @type {string} */
+  let draftLabel = "";
+
+  $: {
+    if (selected !== null) {
+      const labels = draftLabel.split(",").map((l) => l.trim()).filter(Boolean);
+      annotations[selected.id].labels = labels;
+      selected.labels = labels;
+    }
+  }
+
+  $: {
+    console.warn("UPDATE", annotations);
+    localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
+  }
 
   onMount(() => {
     const viewer = new OpenSeadragon.Viewer({
@@ -51,11 +66,9 @@
             ...data,
             labels: [],
           };
-
           annotations[data.id] = annotation;
-          localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
-
           selected = annotation;
+          draftLabel = "";
           break;
         }
         case "moved":
@@ -64,22 +77,19 @@
             ...annotations[data.id],
             ...data,
           }
-
           annotations[data.id] = annotation;
-          localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
-
           if (selected?.id === data.id) selected = annotation;
           break;
         }
         case "removed": {
-          delete annotations[data.id];
-          localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
-
+          // @ts-ignore
+          annotations[data.id] = undefined;
           if (selected?.id === data.id) selected = null;
           break;
         }
         case "selected": {
           selected = annotations[data.id];
+          draftLabel = selected.labels.join(", ");
           break;
         }
       }
@@ -99,7 +109,18 @@
   <div class="my-viewer" id="osd-viewer"></div>
   <div class="my-navigator" id="osd-navigator"></div>
   <div class="my-editor">
-    <pre style="color: beige; font-size: 0.8rem; padding: 8px;">{JSON.stringify(selected, null, 2)}</pre>
+    <pre style="color: beige; font-size: 0.8rem;">{JSON.stringify(selected, null, 2)}</pre>
+    <hr>
+    {#if selected === null}
+      <div>Not selected</div>
+    {:else}
+      <div>
+        <label>
+          <span style="color: beige;">Label:</span>
+          <input type="text" placeholder="foo, bar" bind:value={draftLabel}>
+        </label>
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -131,6 +152,7 @@
   .my-editor {
     grid-area: editor;
     background-color: #333;
+    padding: 8px;
   }
 
   :global(.my-navigator-display-region) {
