@@ -56,13 +56,14 @@ export const install = (viewer, { annotations }) => {
     const annotation = new Annotation(viewer, { id, location })
       .render("restored")
       .activate();
+
     instances.add(annotation);
   }
 
   return () => {
     port.close();
 
-    for (const annotation of instances) annotation.destroy();
+    for (const annotation of instances) { annotation.destroy(); }
     instances.clear();
 
     for (const type of ["mouse", "touch", "pen", "unknown"]) {

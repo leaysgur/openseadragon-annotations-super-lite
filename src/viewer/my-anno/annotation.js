@@ -74,7 +74,7 @@ export class Annotation {
 
     // Need to delay until all possible events are processed
     requestIdleCallback(() => {
-      for (const tracker of this.#mouseTrackers.values()) tracker.destroy();
+      for (const tracker of this.#mouseTrackers.values()) { tracker.destroy(); }
       this.#mouseTrackers.clear();
     });
 
@@ -106,10 +106,12 @@ export class Annotation {
 
   /** @param {boolean} bool */
   select(bool) {
-    this.#selected = bool;
+    if (this.#selected === bool) { return this; }
 
+    this.#selected = bool;
     if (this.#selected) {
       this.#hostElement.classList.add("-selected");
+      this.#notify("selected");
     } else {
       this.#hostElement.classList.remove("-selected");
     }
@@ -124,7 +126,7 @@ export class Annotation {
       new OpenSeadragon.MouseTracker({
         element: this.#hostElement,
         //
-        // CLICK
+        // SELECT
         //
         clickHandler: (ev) => {
           // @ts-ignore: It surely exists!!!
@@ -133,7 +135,6 @@ export class Annotation {
           }
 
           this.select(true);
-          this.#notify("selected");
         },
 
         //
