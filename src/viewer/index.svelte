@@ -2,14 +2,22 @@
   import OpenSeadragon from "openseadragon";
   import { onMount } from "svelte";
   import { install } from "./my-anno/index";
-  /** @typedef {import("./my-anno/annotation").AnnotationInit} AnnotationInit */
+  /** @typedef {import("./my-anno/annotation").AnnotationMessage} AnnotationMessage */
+
+  /**
+   * @typedef {{
+   *   id: string;
+   *   location: [number, number, number, number];
+   *   labels: string[];
+   * }} AnnotationItem
+   */
 
   /** @type {string} */
   export let source;
-  /** @type {Record<string, AnnotationInit>} */
+  /** @type {Record<string, AnnotationItem>} */
   export let annotations;
 
-  /** @type {AnnotationInit | null} */
+  /** @type {AnnotationItem | null} */
   let selected = null;
 
   onMount(() => {
@@ -28,48 +36,59 @@
     // @ts-ignore: To apply custom styles
     viewer.navigator.displayRegion.className = "my-navigator-display-region";
 
-    const { port, destory } = install(viewer, { annotations });
+    const channel = new BroadcastChannel("my-anno");
+    const destory = install(viewer, {
+      annotations: Object.values(annotations),
+    });
 
-    port.onmessage = ({ data: { type, data } }) => {
+    /**
+     * @param {MessageEvent<AnnotationMessage>} ev
+     */
+    channel.onmessage = ({ data: { type, data } }) => {
       switch (type) {
         case "added": {
-          annotations[data.annotation.id] = data.annotation;
+          const annotation = {
+            ...data,
+            labels: [],
+          };
+
+          annotations[data.id] = annotation;
           localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
-          selected = data.annotation;
+
+          selected = annotation;
           break;
         }
-        case "moved": {
-          annotations[data.annotation.id] = data.annotation;
-          localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
-          if (selected?.id === data.annotation.id)
-            selected = data.annotation;
-          break;
-        }
+        case "moved":
         case "resized": {
-          annotations[data.annotation.id] = data.annotation;
+          const annotation = {
+            ...annotations[data.id],
+            ...data,
+          }
+
+          annotations[data.id] = annotation;
           localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
-          if (selected?.id === data.annotation.id)
-            selected = data.annotation;
+
+          if (selected?.id === data.id) selected = annotation;
           break;
         }
         case "removed": {
-          delete annotations[data.annotation.id];
+          delete annotations[data.id];
           localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
 
-          if (selected?.id === data.annotation.id)
-            selected = null;
+          if (selected?.id === data.id) selected = null;
           break;
         }
-        case "clicked": {
-          selected = data.annotation;
+        case "selected": {
+          selected = annotations[data.id];
           break;
         }
       }
 
-      console.log(type, annotations);
+      console.warn(type, annotations);
     };
 
     return () => {
+      channel.close();
       destory();
       viewer.destroy();
     };
@@ -123,10 +142,14 @@
     border: 2px solid gold;
     background-color: rgba(255, 255, 255, 0.3);
     cursor: move;
+    will-change: width, height, top, left;
   }
   :global(.anno-overlay.-grabbing) {
     border-style: dashed;
     cursor: grabbing;
+  }
+  :global(.anno-overlay.-selected) {
+    border-color: blue;
   }
   :global(.anno-overlay-resize-handle) {
     cursor: nwse-resize;

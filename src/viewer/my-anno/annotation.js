@@ -5,78 +5,124 @@ import OpenSeadragon from "openseadragon";
  *   id: string;
  *   location: [x: number, y: number, w: number, h: number];
  * }} AnnotationInit
+ *
+ * @typedef {
+ *   | "added"
+ *   | "restored"
+ *   | "moved"
+ *   | "resized"
+ *   | "removed"
+ *   | "selected"
+ * } AnnotationMessageType;
+ * @typedef {{
+ *   id: string;
+ *   location: [x: number, y: number, w: number, h: number];
+ * }} AnnotationMessageData
+ * @typedef {{
+ *   type: AnnotationMessageType;
+ *   data: AnnotationMessageData;
+ * }} AnnotationMessage
  * */
 
 export class Annotation {
+  /** @type {import("openseadragon").Viewer} viewer */
+  #viewer;
+  /** @type {string} */
+  #id;
+  /** @type {import("openseadragon").Rect} */
+  #location;
+
+  /** @type {HTMLDivElement} */
+  #hostElement = document.createElement("div");
+  #selected = false;
+  /** @type {BroadcastChannel} */
+  #channel = new BroadcastChannel("my-anno");
+  /** @type {Map<string, import("openseadragon").MouseTracker>} */
+  #mouseTrackers = new Map();
+
   /**
    * @param {import("openseadragon").Viewer} viewer
    * @param {AnnotationInit} init
-   * @param {MessagePort} port
    */
-  constructor(viewer, { id, location }, port) {
-    this.viewer = viewer;
-
-    this.id = id;
-    /** @type {import("openseadragon").Rect} */
-    this.location = new OpenSeadragon.Rect(...location);
-
-    this.port = port;
-
-    this.hostElement = document.createElement("div");
-    Object.assign(this.hostElement, {
-      id: this.id,
-      className: "anno-overlay",
-    });
-
-    /** @type {Map<string, import("openseadragon").MouseTracker>} */
-    this.mouseTrackers = new Map();
+  constructor(viewer, { id, location }) {
+    this.#viewer = viewer;
+    this.#id = id;
+    this.#location = new OpenSeadragon.Rect(...location);
   }
 
-  /** @param {string} trigger */
-  notify(trigger) {
-    /** @type {AnnotationInit} */
-    const json = {
-      id: this.id,
-      location: [
-        this.location.x,
-        this.location.y,
-        this.location.width,
-        this.location.height,
-      ],
+  /** @param {AnnotationMessageType} type */
+  #notify(type) {
+    /** @type {AnnotationMessage} */
+    const message = {
+      type,
+      data: {
+        id: this.#id,
+        location: [
+          this.#location.x,
+          this.#location.y,
+          this.#location.width,
+          this.#location.height,
+        ],
+      },
     };
-
-    this.port.postMessage({ type: trigger, data: { annotation: json } });
+    this.#channel.postMessage(message);
   }
 
   destroy() {
-    const { viewer, hostElement: $overlay } = this;
-
     // Internally calls overlay.destroy();
-    viewer.removeOverlay($overlay);
+    this.#viewer.removeOverlay(this.#hostElement);
+
     // Need to delay until all possible events are processed
     requestIdleCallback(() => {
-      [...this.mouseTrackers.values()].forEach((tracker) => tracker.destroy());
-      this.mouseTrackers.clear();
+      for (const tracker of this.#mouseTrackers.values()) tracker.destroy();
+      this.#mouseTrackers.clear();
     });
 
-    this.notify("removed");
+    this.#notify("removed");
+
+    this.#channel.onmessage = null;
+    this.#channel.close();
   }
 
   /** @param {"added" | "restored"} trigger */
   render(trigger) {
-    this.viewer.addOverlay(this.hostElement, this.location);
+    Object.assign(this.#hostElement, {
+      id: this.#id,
+      className: "anno-overlay",
+    });
 
-    this.notify(trigger);
+    this.#viewer.addOverlay(this.#hostElement, this.#location);
+
+    this.#notify(trigger);
+
+    this.#channel.onmessage = ({ data }) => {
+      if (data.type === "selected" || data.type === "added") {
+        this.select(false);
+      }
+    };
+
+    return this;
+  }
+
+  /** @param {boolean} bool */
+  select(bool) {
+    this.#selected = bool;
+
+    if (this.#selected) {
+      this.#hostElement.classList.add("-selected");
+    } else {
+      this.#hostElement.classList.remove("-selected");
+    }
+
+    return this;
   }
 
   activate() {
-    const { id, viewer, hostElement: $overlay } = this;
-
-    const overlay = this.viewer.getOverlayById(id);
-    this.mouseTrackers.set(
+    const overlay = this.#viewer.getOverlayById(this.#id);
+    this.#mouseTrackers.set(
       "overlay",
       new OpenSeadragon.MouseTracker({
-        element: $overlay,
+        element: this.#hostElement,
         //
         // CLICK
         //
@@ -86,28 +132,29 @@ export class Annotation {
             return;
           }
 
-          this.notify("clicked");
+          this.select(true);
+          this.#notify("selected");
         },
 
         //
         // DRAG
         //
-        pressHandler: () => {
-          $overlay.classList.add("-grabbing");
-        },
-        releaseHandler: () => {
-          $overlay.classList.remove("-grabbing");
-          this.notify("moved");
-        },
         dragHandler: (ev) => {
+          this.#hostElement.classList.add("-grabbing");
+
           // @ts-ignore: It surely exists!!!
-          const delta = viewer.viewport.deltaPointsFromPixels(ev.delta);
-          const loc = overlay.getBounds(viewer.viewport);
+          const delta = this.#viewer.viewport.deltaPointsFromPixels(ev.delta);
+          const loc = overlay.getBounds(this.#viewer.viewport);
 
           const nextLoc = loc.translate(delta);
 
-          this.location = nextLoc;
-          viewer.updateOverlay($overlay, nextLoc);
+          this.#location = nextLoc;
+          this.#viewer.updateOverlay(this.#hostElement, nextLoc);
+        },
+        // XXX: Should double check on releaseHandler?
+        dragEndHandler: () => {
+          this.#hostElement.classList.remove("-grabbing");
+          this.#notify("moved");
         },
       }),
     );
@@ -119,9 +166,9 @@ export class Annotation {
     Object.assign($removeHandle, {
       className: "anno-overlay-remove-handle",
     });
-    $overlay.append($removeHandle);
+    this.#hostElement.append($removeHandle);
 
-    this.mouseTrackers.set(
+    this.#mouseTrackers.set(
       "removeHandle",
       new OpenSeadragon.MouseTracker({
         element: $removeHandle,
@@ -143,33 +190,34 @@ export class Annotation {
     Object.assign($resizeHandle, {
       className: "anno-overlay-resize-handle",
     });
-    $overlay.append($resizeHandle);
+    this.#hostElement.append($resizeHandle);
 
-    this.mouseTrackers.set(
+    this.#mouseTrackers.set(
       "resizeHandle",
       new OpenSeadragon.MouseTracker({
         element: $resizeHandle,
-        pressHandler: () => {
-          $resizeHandle.classList.add("-grabbing");
-        },
-        releaseHandler: () => {
-          $resizeHandle.classList.remove("-grabbing");
-          this.notify("resized");
-        },
         dragHandler: (ev) => {
+          $resizeHandle.classList.add("-grabbing");
+
           // @ts-ignore: It surely exists!!!
-          const delta = viewer.viewport.deltaPointsFromPixels(ev.delta);
-          const loc = overlay.getBounds(viewer.viewport);
+          const delta = this.#viewer.viewport.deltaPointsFromPixels(ev.delta);
+          const loc = overlay.getBounds(this.#viewer.viewport);
 
           const nextLoc = loc.clone();
           // Resize = x, y stays same, updates w, h
           nextLoc.width = loc.width + delta.x;
           nextLoc.height = loc.height + delta.y;
 
-          this.location = nextLoc;
-          viewer.updateOverlay($overlay, nextLoc);
+          this.#location = nextLoc;
+          this.#viewer.updateOverlay(this.#hostElement, nextLoc);
+        },
+        dragEndHandler: () => {
+          $resizeHandle.classList.remove("-grabbing");
+          this.#notify("resized");
         },
       }),
     );
+
+    return this;
   }
 }

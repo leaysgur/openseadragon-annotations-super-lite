@@ -3,10 +3,10 @@ import { Annotation } from "./annotation";
 
 /**
  * @param {import("openseadragon").Viewer} viewer
- * @param {MessagePort} port
+ * @param {Set<Annotation>} instances
  */
 const handleViewerCanvasClick =
-  (viewer, port) =>
+  (viewer, instances) =>
   /** @param {import("openseadragon").CanvasClickEvent} ev */
   (ev) => {
     if (!ev.quick) {
@@ -22,44 +22,52 @@ const handleViewerCanvasClick =
       0.05,
     ]);
 
-    const annotation = new Annotation(viewer, { id, location }, port);
-    annotation.render("added");
-    annotation.activate();
+    const annotation = new Annotation(viewer, { id, location })
+      .render("added")
+      .activate()
+      .select(true);
+
+    instances.add(annotation);
   };
 
 /**
  * @param {import("openseadragon").Viewer} viewer
  * @param {{
- *   annotations: Record<string, AnnotationInit>;
+ *   annotations: AnnotationInit[];
  * }} options
  */
 export const install = (viewer, { annotations }) => {
-  const { port1, port2 } = new MessageChannel();
+  const port = new BroadcastChannel("my-anno");
+  /** @type {Set<Annotation>} */
+  const instances = new Set();
 
   // Disable it for click-to-add-overlay
   for (const type of ["mouse", "touch", "pen", "unknown"]) {
     viewer.gestureSettingsByDeviceType(type).clickToZoom = false;
   }
 
-  const onViewerCanvasClick = handleViewerCanvasClick(viewer, port1);
+  const onViewerCanvasClick = handleViewerCanvasClick(viewer, instances);
 
   // Click to add overlay
   viewer.addHandler("canvas-click", onViewerCanvasClick);
 
   // Restore
-  for (const { id, location } of Object.values(annotations)) {
-    const annotation = new Annotation(viewer, { id, location }, port1);
-    annotation.render("restored");
-    annotation.activate();
+  for (const { id, location } of annotations) {
+    const annotation = new Annotation(viewer, { id, location })
+      .render("restored")
+      .activate();
+    instances.add(annotation);
   }
 
-  return {
-    port: port2,
-    destory: () => {
-      port1.close();
-      port2.close();
+  return () => {
+    port.close();
 
-      viewer.removeHandler("canvas-click", onViewerCanvasClick);
-    },
+    for (const annotation of instances) annotation.destroy();
+    instances.clear();
+
+    for (const type of ["mouse", "touch", "pen", "unknown"]) {
+      viewer.gestureSettingsByDeviceType(type).clickToZoom = true;
+    }
+    viewer.removeHandler("canvas-click", onViewerCanvasClick);
   };
 };

@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import Viewer from "./viewer/index.svelte";
 
-  /** @type {Promise<{ source: string; annotations: any[] }>} */
+  /** @type {Promise<{ source: string; annotations: Record<string, any> }>} */
   let data = new Promise(() => {});
   onMount(() => {
     // XXX: Maybe fetch()
