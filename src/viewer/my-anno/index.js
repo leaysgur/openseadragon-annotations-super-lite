@@ -37,7 +37,6 @@ const handleViewerCanvasClick =
  * }} options
  */
 export const install = (viewer, { annotations }) => {
-  const port = new BroadcastChannel("my-anno");
   /** @type {Set<Annotation>} */
   const instances = new Set();
 
@@ -46,9 +45,8 @@ export const install = (viewer, { annotations }) => {
     viewer.gestureSettingsByDeviceType(type).clickToZoom = false;
   }
 
-  const onViewerCanvasClick = handleViewerCanvasClick(viewer, instances);
-
   // Click to add overlay
+  const onViewerCanvasClick = handleViewerCanvasClick(viewer, instances);
   viewer.addHandler("canvas-click", onViewerCanvasClick);
 
   // Restore
@@ -61,8 +59,6 @@ export const install = (viewer, { annotations }) => {
   }
 
   return () => {
-    port.close();
-
     for (const annotation of instances) {
       annotation.destroy();
     }
