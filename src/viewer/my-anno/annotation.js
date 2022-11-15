@@ -74,7 +74,9 @@ export class Annotation {
 
     // Need to delay until all possible events are processed
     requestIdleCallback(() => {
-      for (const tracker of this.#mouseTrackers.values()) { tracker.destroy(); }
+      for (const tracker of this.#mouseTrackers.values()) {
+        tracker.destroy();
+      }
       this.#mouseTrackers.clear();
     });
 
@@ -106,7 +108,9 @@ export class Annotation {
 
   /** @param {boolean} bool */
   select(bool) {
-    if (this.#selected === bool) { return this; }
+    if (this.#selected === bool) {
+      return this;
+    }
 
     this.#selected = bool;
     if (this.#selected) {
@@ -187,37 +191,69 @@ export class Annotation {
     //
     // RESIZE
     //
-    const $resizeHandle = document.createElement("div");
-    Object.assign($resizeHandle, {
-      className: "anno-overlay-resize-handle",
-    });
-    this.#hostElement.append($resizeHandle);
+    /** @type {[string, HTMLDivElement][]} */
+    const $resizeHandles = [
+      ["top-left", document.createElement("div")],
+      ["top-right", document.createElement("div")],
+      ["bottom-right", document.createElement("div")],
+      ["bottom-left", document.createElement("div")],
+    ];
 
-    this.#mouseTrackers.set(
-      "resizeHandle",
-      new OpenSeadragon.MouseTracker({
-        element: $resizeHandle,
-        dragHandler: (ev) => {
-          $resizeHandle.classList.add("-grabbing");
+    for (const [pos, $resizeHandle] of $resizeHandles) {
+      Object.assign($resizeHandle, {
+        className: `anno-overlay-resize-handle anno-overlay-resize-handle-${pos}`,
+      });
+      this.#hostElement.append($resizeHandle);
 
-          // @ts-ignore: It surely exists!!!
-          const delta = this.#viewer.viewport.deltaPointsFromPixels(ev.delta);
-          const loc = overlay.getBounds(this.#viewer.viewport);
+      this.#mouseTrackers.set(
+        `resizeHandle:${pos}`,
+        new OpenSeadragon.MouseTracker({
+          element: $resizeHandle,
+          dragHandler: (ev) => {
+            $resizeHandle.classList.add("-grabbing");
 
-          const nextLoc = loc.clone();
-          // Resize = x, y stays same, updates w, h
-          nextLoc.width = loc.width + delta.x;
-          nextLoc.height = loc.height + delta.y;
+            // @ts-ignore: It surely exists!!!
+            const delta = this.#viewer.viewport.deltaPointsFromPixels(ev.delta);
+            const loc = overlay.getBounds(this.#viewer.viewport);
 
-          this.#location = nextLoc;
-          this.#viewer.updateOverlay(this.#hostElement, nextLoc);
-        },
-        dragEndHandler: () => {
-          $resizeHandle.classList.remove("-grabbing");
-          this.#notify("resized");
-        },
-      }),
-    );
+            const nextLoc = loc.clone();
+            switch (pos) {
+              case "top-left": {
+                nextLoc.x = loc.x + delta.x;
+                nextLoc.y = loc.y + delta.y;
+                nextLoc.width = loc.width - delta.x;
+                nextLoc.height = loc.height - delta.y;
+                break;
+              }
+              case "top-right": {
+                nextLoc.y = loc.y + delta.y;
+                nextLoc.width = loc.width + delta.x;
+                nextLoc.height = loc.height - delta.y;
+                break;
+              }
+              case "bottom-right": {
+                nextLoc.width = loc.width + delta.x;
+                nextLoc.height = loc.height + delta.y;
+                break;
+              }
+              case "bottom-left": {
+                nextLoc.x = loc.x + delta.x;
+                nextLoc.width = loc.width - delta.x;
+                nextLoc.height = loc.height + delta.y;
+                break;
+              }
+            }
+
+            this.#location = nextLoc;
+            this.#viewer.updateOverlay(this.#hostElement, nextLoc);
+          },
+          dragEndHandler: () => {
+            $resizeHandle.classList.remove("-grabbing");
+            this.#notify("resized");
+          },
+        }),
+      );
+    }
 
     return this;
   }

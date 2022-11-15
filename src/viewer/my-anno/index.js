@@ -63,7 +63,9 @@ export const install = (viewer, { annotations }) => {
   return () => {
     port.close();
 
-    for (const annotation of instances) { annotation.destroy(); }
+    for (const annotation of instances) {
+      annotation.destroy();
+    }
     instances.clear();
 
     for (const type of ["mouse", "touch", "pen", "unknown"]) {

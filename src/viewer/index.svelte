@@ -162,7 +162,7 @@
 
   :global(.anno-overlay) {
     box-sizing: border-box;
-    border: 2px solid gold;
+    border: 2px solid #3887E2;
     background-color: rgba(255, 255, 255, 0.3);
     cursor: move;
     will-change: width, height, top, left;
@@ -171,25 +171,46 @@
     border-style: dashed;
     cursor: grabbing;
   }
-  :global(.anno-overlay.-selected) {
-    border-color: blue;
+  :global(.anno-overlay.-selected),
+  :global(.anno-overlay.-selected .anno-overlay-resize-handle) {
+    border-color: gold;
   }
   :global(.anno-overlay-resize-handle) {
-    cursor: nwse-resize;
-    background-color: gold;
-    width: 8px; /* Never scales */
-    height: 8px;
+    background-color: beige;
+    border: 2px solid #3887E2;
+    box-sizing: border-box;
+    width: 12px; /* Never scales */
+    height: 12px;
     position: absolute;
-    bottom: -2px;
-    right: -2px;
+  }
+  :global(.anno-overlay-resize-handle-top-left) {
+    cursor: nwse-resize;
+    top: -6px;
+    left: -6px;
+  }
+  :global(.anno-overlay-resize-handle-top-right) {
+    cursor: nesw-resize;
+    top: -6px;
+    right: -6px;
+  }
+  :global(.anno-overlay-resize-handle-bottom-right) {
+    cursor: nwse-resize;
+    bottom: -6px;
+    right: -6px;
+  }
+  :global(.anno-overlay-resize-handle-bottom-left) {
+    cursor: nesw-resize;
+    bottom: -6px;
+    left: -6px;
   }
   :global(.anno-overlay-remove-handle) {
     cursor: pointer;
     background-color: tomato;
-    width: 8px; /* Never scales */
-    height: 8px;
+    width: 16px; /* Never scales */
+    height: 16px;
+    border-radius: 50%;
     position: absolute;
-    top: -2px;
-    left: -2px;
+    top: -24px;
+    left: -24px;
   }
 </style>
