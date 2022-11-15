@@ -162,7 +162,7 @@
 
   :global(.anno-overlay) {
     box-sizing: border-box;
-    border: 2px solid #3887E2;
+    border: 2px solid gold;
     background-color: rgba(255, 255, 255, 0.3);
     cursor: move;
     will-change: width, height, top, left;
@@ -173,11 +173,11 @@
   }
   :global(.anno-overlay.-selected),
   :global(.anno-overlay.-selected .anno-overlay-resize-handle) {
-    border-color: gold;
+    border-color: #3887E2;
   }
   :global(.anno-overlay-resize-handle) {
     background-color: beige;
-    border: 2px solid #3887E2;
+    border: 2px solid gold;
     box-sizing: border-box;
     width: 12px; /* Never scales */
     height: 12px;
