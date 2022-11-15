@@ -40,6 +40,7 @@
       id: "osd-viewer",
 
       showNavigationControl: false,
+      animationTime: 0.1,
 
       showNavigator: true,
       navigatorId: "osd-navigator",
