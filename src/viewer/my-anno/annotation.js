@@ -1,4 +1,5 @@
 import OpenSeadragon from "openseadragon";
+import { subscribe, publish } from "./events";
 
 /**
  * @typedef {{
@@ -14,15 +15,7 @@ import OpenSeadragon from "openseadragon";
  *   | "removed"
  *   | "selected"
  * } AnnotationMessageType;
- * @typedef {{
- *   id: string;
- *   location: [x: number, y: number, w: number, h: number];
- * }} AnnotationMessageData
- * @typedef {{
- *   type: AnnotationMessageType;
- *   data: AnnotationMessageData;
- * }} AnnotationMessage
- * */
+ */
 
 export class Annotation {
   /** @type {import("openseadragon").Viewer} viewer */
@@ -35,10 +28,10 @@ export class Annotation {
   /** @type {HTMLDivElement} */
   #hostElement = document.createElement("div");
   #selected = false;
-  /** @type {BroadcastChannel} */
-  #channel = new BroadcastChannel("my-anno");
   /** @type {Map<string, import("openseadragon").MouseTracker>} */
   #mouseTrackers = new Map();
+  /** @type {Function[]} */
+  #disposers = [];
 
   /**
    * @param {import("openseadragon").Viewer} viewer
@@ -56,20 +49,20 @@ export class Annotation {
 
   /** @param {AnnotationMessageType} type */
   #notify(type) {
-    /** @type {AnnotationMessage} */
-    const message = {
-      type,
-      data: {
-        id: this.#id,
-        location: [
-          this.#location.x,
-          this.#location.y,
-          this.#location.width,
-          this.#location.height,
-        ],
-      },
+    publish(type, this);
+  }
+
+  /** @returns {AnnotationInit} */
+  toJSON() {
+    return {
+      id: this.#id,
+      location: [
+        this.#location.x,
+        this.#location.y,
+        this.#location.width,
+        this.#location.height,
+      ],
     };
-    this.#channel.postMessage(message);
   }
 
   destroy() {
@@ -85,9 +78,9 @@ export class Annotation {
     });
 
     this.#notify("removed");
-
-    this.#channel.onmessage = null;
-    this.#channel.close();
+    for (const dispose of this.#disposers) {
+      dispose();
+    }
   }
 
   /** @param {"added" | "restored"} trigger */
@@ -122,11 +115,20 @@ export class Annotation {
   }
 
   activate() {
-    this.#channel.onmessage = ({ data }) => {
-      if (data.type === "selected" || data.type === "added") {
+    this.#disposers = [
+      subscribe("selected", (data) => {
+        if (data === this) {
+          return;
+        }
         this.select(false);
-      }
-    };
+      }),
+      subscribe("added", (data) => {
+        if (data === this) {
+          return;
+        }
+        this.select(false);
+      }),
+    ];
 
     const overlay = this.#viewer.getOverlayById(this.#id);
     this.#mouseTrackers.set(

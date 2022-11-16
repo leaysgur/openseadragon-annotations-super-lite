@@ -1,12 +1,10 @@
 import { Annotation } from "./annotation";
+import { subscribe } from "./events";
 /** @typedef {import("./annotation").AnnotationInit} AnnotationInit */
 
-/**
- * @param {import("openseadragon").Viewer} viewer
- * @param {Set<Annotation>} instances
- */
+/** @param {import("openseadragon").Viewer} viewer */
 const handleViewerCanvasClick =
-  (viewer, instances) =>
+  (viewer) =>
   /** @param {import("openseadragon").CanvasClickEvent} ev */
   (ev) => {
     if (!ev.quick) {
@@ -22,12 +20,10 @@ const handleViewerCanvasClick =
       0.05,
     ]);
 
-    const annotation = new Annotation(viewer, { id, location })
+    new Annotation(viewer, { id, location })
       .render("added")
       .activate()
       .select(true);
-
-    instances.add(annotation);
   };
 
 /**
@@ -47,9 +43,10 @@ const handleViewerCanvasKey =
         for (const annotation of instances) {
           if (annotation.selected) {
             annotation.destroy();
-            instances.delete(annotation);
           }
         }
+        ev.originalEvent.preventDefault();
+        break;
       }
     }
   };
@@ -64,33 +61,50 @@ export const install = (viewer, { annotations }) => {
   /** @type {Set<Annotation>} */
   const instances = new Set();
 
+  const disposers = [
+    subscribe("added", (data) => {
+      instances.add(data);
+    }),
+    subscribe("restored", (data) => {
+      instances.add(data);
+    }),
+    subscribe("removed", (data) => {
+      instances.delete(data);
+    }),
+  ];
+
   // Disable it for click-to-add-overlay
   for (const type of ["mouse", "touch", "pen", "unknown"]) {
     viewer.gestureSettingsByDeviceType(type).clickToZoom = false;
   }
 
   // Click to add overlay
-  const onViewerCanvasClick = handleViewerCanvasClick(viewer, instances);
+  const onViewerCanvasClick = handleViewerCanvasClick(viewer);
   viewer.addHandler("canvas-click", onViewerCanvasClick);
 
   // Keyboard shortcut
   const onViewerCanvasKey = handleViewerCanvasKey(viewer, instances);
   viewer.addHandler("canvas-key", onViewerCanvasKey);
   // Event is only fired when focused
-  viewer.canvas.focus();
+  const onViewerCanvasEnter = () => viewer.canvas.focus();
+  const onViewerCanvasExit = () => viewer.canvas.blur();
+  viewer.addHandler("canvas-enter", onViewerCanvasEnter);
+  viewer.addHandler("canvas-exit", onViewerCanvasExit);
 
   // Restore
   for (const init of annotations) {
-    if (!init) continue;
+    if (!init) {
+      continue;
+    }
 
-    const annotation = new Annotation(viewer, init)
-      .render("restored")
-      .activate();
-
-    instances.add(annotation);
+    new Annotation(viewer, init).render("restored").activate();
   }
 
   return () => {
+    for (const dispose of disposers) {
+      dispose();
+    }
+
     for (const annotation of instances) {
       annotation.destroy();
     }
@@ -102,5 +116,9 @@ export const install = (viewer, { annotations }) => {
     viewer.removeHandler("canvas-click", onViewerCanvasClick);
 
     viewer.removeHandler("canvas-key", onViewerCanvasKey);
+    viewer.removeHandler("canvas-enter", onViewerCanvasEnter);
+    viewer.removeHandler("canvas-exit", onViewerCanvasExit);
   };
 };
+
+export { subscribe } from "./events";
