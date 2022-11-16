@@ -76,10 +76,14 @@ export const install = (viewer, { annotations }) => {
   // Keyboard shortcut
   const onViewerCanvasKey = handleViewerCanvasKey(viewer, instances);
   viewer.addHandler("canvas-key", onViewerCanvasKey);
+  // Event is only fired when focused
+  viewer.canvas.focus();
 
   // Restore
-  for (const { id, location } of annotations) {
-    const annotation = new Annotation(viewer, { id, location })
+  for (const init of annotations) {
+    if (!init) continue;
+
+    const annotation = new Annotation(viewer, init)
       .render("restored")
       .activate();
 

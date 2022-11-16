@@ -101,12 +101,6 @@ export class Annotation {
 
     this.#notify(trigger);
 
-    this.#channel.onmessage = ({ data }) => {
-      if (data.type === "selected" || data.type === "added") {
-        this.select(false);
-      }
-    };
-
     return this;
   }
 
@@ -128,6 +122,12 @@ export class Annotation {
   }
 
   activate() {
+    this.#channel.onmessage = ({ data }) => {
+      if (data.type === "selected" || data.type === "added") {
+        this.select(false);
+      }
+    };
+
     const overlay = this.#viewer.getOverlayById(this.#id);
     this.#mouseTrackers.set(
       "overlay",
