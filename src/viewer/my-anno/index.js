@@ -32,6 +32,30 @@ const handleViewerCanvasClick =
 
 /**
  * @param {import("openseadragon").Viewer} viewer
+ * @param {Set<Annotation>} instances
+ */
+const handleViewerCanvasKey =
+  (viewer, instances) =>
+  /** @param {import("openseadragon").CanvasKeyEvent} ev */
+  (ev) => {
+    viewer;
+
+    // @ts-ignore: It surely exists!!!
+    switch (ev.originalEvent.key) {
+      case "Backspace":
+      case "Delete": {
+        for (const annotation of instances) {
+          if (annotation.selected) {
+            annotation.destroy();
+            instances.delete(annotation);
+          }
+        }
+      }
+    }
+  };
+
+/**
+ * @param {import("openseadragon").Viewer} viewer
  * @param {{
  *   annotations: AnnotationInit[];
  * }} options
@@ -48,6 +72,10 @@ export const install = (viewer, { annotations }) => {
   // Click to add overlay
   const onViewerCanvasClick = handleViewerCanvasClick(viewer, instances);
   viewer.addHandler("canvas-click", onViewerCanvasClick);
+
+  // Keyboard shortcut
+  const onViewerCanvasKey = handleViewerCanvasKey(viewer, instances);
+  viewer.addHandler("canvas-key", onViewerCanvasKey);
 
   // Restore
   for (const { id, location } of annotations) {
@@ -68,5 +96,7 @@ export const install = (viewer, { annotations }) => {
       viewer.gestureSettingsByDeviceType(type).clickToZoom = true;
     }
     viewer.removeHandler("canvas-click", onViewerCanvasClick);
+
+    viewer.removeHandler("canvas-key", onViewerCanvasKey);
   };
 };

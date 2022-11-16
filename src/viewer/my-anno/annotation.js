@@ -50,6 +50,10 @@ export class Annotation {
     this.#location = new OpenSeadragon.Rect(...location);
   }
 
+  get selected() {
+    return this.#selected;
+  }
+
   /** @param {AnnotationMessageType} type */
   #notify(type) {
     /** @type {AnnotationMessage} */
