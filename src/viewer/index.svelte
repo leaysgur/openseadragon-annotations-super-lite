@@ -49,7 +49,7 @@
     });
 
     // @ts-ignore: To apply custom styles
-    viewer.navigator.displayRegion.className = "my-navigator-display-region";
+    viewer.navigator.displayRegion.classList.add("my-navigator-display-region");
 
     const destory = install(viewer, {
       annotations: Object.values(annotations),
@@ -109,20 +109,20 @@
 
 <div class="main">
   <div class="my-viewer" id="osd-viewer"></div>
-  <div class="my-navigator" id="osd-navigator"></div>
+  <div class="my-navigator" id="osd-navigator" style="height: 100%; width: 100%;"></div>
   <div class="my-editor">
-    <pre style="color: beige; font-size: 0.8rem;">{JSON.stringify(selected, null, 2)}</pre>
+    <p>Annotation</p>
     <hr>
     {#if selected === null}
       <div>Not selected</div>
     {:else}
       <div>
-        <label>
-          <span style="color: beige;">Label:</span>
-          <input type="text" placeholder="foo, bar" bind:value={draftLabel}>
-        </label>
+        <label for="labels">Labels</label>
+        <input type="text" id="labels" placeholder="foo, bar" bind:value={draftLabel}>
       </div>
     {/if}
+    <hr>
+    <pre>{JSON.stringify(selected, null, 2)}</pre>
   </div>
 </div>
 
@@ -130,31 +130,46 @@
   .main {
     display: grid;
     grid-template:
-      "viewer navigator" 200px
+      "viewer navigator" 250px
       "viewer editor"    1fr
-    /  1fr    240px;
-    gap: 8px;
+    /  1fr    250px;
     height: 100%;
-    background-color: #222;
+    background-color: #2C2C2C;
   }
 
   .my-viewer {
     grid-area: viewer;
-    background-color: #333;
   }
   .my-navigator {
     grid-area: navigator;
-    background-color: #333;
-  }
-  /* This is required... */
-  #osd-navigator {
-    width: 100%;
-    height: 100%;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    box-sizing: border-box;
   }
   .my-editor {
     grid-area: editor;
-    background-color: #333;
-    padding: 8px;
+    color: #FFF;
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    box-sizing: border-box;
+    font-size: 0.7rem;
+  }
+
+  .my-editor hr {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-top: none;
+    margin: 16px -16px;
+  }
+  .my-editor label {
+    display: block;
+    margin-bottom: 8px;
+  }
+  .my-editor input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .my-editor pre {
+    font-size: .7rem;
   }
 
   :global(.my-navigator-display-region) {
@@ -163,23 +178,22 @@
 
   :global(.anno-overlay) {
     box-sizing: border-box;
-    border: 2px solid gold;
-    background-color: rgba(255, 255, 255, 0.3);
+    border: 2px solid #001AFF;
+    outline: 1px solid rgba(255, 255, 255, 0.8);
     cursor: move;
     will-change: width, height, top, left;
   }
-  :global(.anno-overlay.-grabbing) {
-    border-style: dashed;
-    cursor: grabbing;
+  :global(.anno-overlay:hover) {
+    background-color: rgba(0, 26, 255, 0.2);
   }
-  :global(.anno-overlay.-selected),
-  :global(.anno-overlay.-selected .anno-overlay-resize-handle) {
-    border-color: #3887E2;
+  :global(.anno-overlay.-grabbing) {
+    background-color: transparent;
+    cursor: grabbing;
   }
   :global(.anno-overlay-resize-handle) {
     display: none;
-    background-color: beige;
-    border: 2px solid gold;
+    background-color: #FFF;
+    border: 1px solid #001AFF;
     box-sizing: border-box;
     width: 12px; /* Never scales */
     height: 12px;
@@ -208,16 +222,25 @@
   :global(.anno-overlay-remove-handle) {
     display: none;
     cursor: pointer;
-    background-color: tomato;
     width: 16px; /* Never scales */
     height: 16px;
-    border-radius: 50%;
+    background: #2C2C2C;
+    border-radius: 2px;
     position: absolute;
-    top: -24px;
-    left: -24px;
+    bottom: -24px;
+    left: 0;
+    right: 0;
+    margin: auto;
+  }
+  :global(.anno-overlay-remove-handle::after) {
+    content: "X";
+    font-size: .5rem;
+    color: #FFF;
   }
   :global(.anno-overlay.-selected .anno-overlay-resize-handle),
   :global(.anno-overlay.-selected .anno-overlay-remove-handle) {
-    display: block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 </style>

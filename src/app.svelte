@@ -34,16 +34,17 @@
 <style>
   div {
     display: grid;
-    grid-template-rows: 30px 1fr;
+    grid-template-rows: 50px 1fr;
     height: 100%;
   }
 
   header {
-    background-color: #111;
-    color: #fff;
-    padding: 8px 16px;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
+    background-color: #2C2C2C;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
   h1 {
     margin: 0;
