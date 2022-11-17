@@ -1,7 +1,8 @@
 <script>
   import OpenSeadragon from "openseadragon";
   import { onMount } from "svelte";
-  import { install, subscribe } from "./my-anno/index";
+  import { MyAnno } from "./my-anno/index";
+  /** @typedef {import("./my-anno/index").AnnotationEvent} AnnotationEvent */
 
   /**
    * @typedef {{
@@ -51,57 +52,59 @@
     // @ts-ignore: To apply custom styles
     viewer.navigator.displayRegion.classList.add("my-navigator-display-region");
 
-    const destory = install(viewer, {
-      annotations: Object.values(annotations),
-    });
+    const myAnno = new MyAnno(viewer);
+    myAnno.restore(Object.values(annotations)).activate();
+    console.warn(myAnno);
+    const channel = new BroadcastChannel("my-anno");
 
-    const disposers = [
-      subscribe("added", (data) => {
-        const init = data.toJSON();
-        const annotation = {
-          ...init,
-          labels: [],
-        };
-        annotations[init.id] = annotation;
-        selected = annotation;
-        draftLabel = "";
-      }),
-      subscribe("moved", (data) => {
-        const init = data.toJSON();
-        const annotation = {
-          ...annotations[init.id],
-          ...init,
+    /** @param {MessageEvent<AnnotationEvent>} ev */
+    channel.onmessage = ({ data: message }) => {
+      // Do not destruct too early for type guards
+      const { type, data } = message;
+      switch (type) {
+        case "annotation:added": {
+          const item = {
+            ...data,
+            labels: [],
+          };
+          annotations[data.id] = item;
+          selected = item;
+          draftLabel = "";
+          break;
         }
-        annotations[init.id] = annotation;
-        if (selected?.id === init.id) selected = annotation;
-      }),
-      subscribe("resized", (data) => {
-        const init = data.toJSON();
-        const annotation = {
-          ...annotations[init.id],
-          ...init,
+        case "annotation:updated": {
+          const item = {
+            ...annotations[data.id],
+            ...data,
+          }
+          annotations[data.id] = item;
+          if (selected?.id === data.id) selected = item;
+          break;
         }
-        annotations[init.id] = annotation;
-        if (selected?.id === init.id) selected = annotation;
-      }),
-      subscribe("removed", (data) => {
-        const init = data.toJSON();
-        // @ts-ignore
-        annotations[init.id] = undefined;
-        if (selected?.id === init.id) selected = null;
-      }),
-      subscribe("selected", (data) => {
-        const init = data.toJSON();
-        selected = annotations[init.id];
-        draftLabel = selected.labels.join(", ");
-      }),
-    ];
+        case "annotation:removed": {
+          // @ts-ignore
+          annotations[data.id] = undefined;
+          if (selected?.id === data.id) selected = null;
+          draftLabel = "";
+          break;
+        }
+        case "annotation:selected": {
+          selected = annotations[data.id];
+          draftLabel = selected.labels.join(", ");
+          break;
+        }
+        case "annotation:deselected": {
+          selected = null;
+          draftLabel = "";
+          break;
+        }
+      }
+    };
 
     return () => {
-      for (const dispose of disposers) {
-        dispose();
-      }
-      destory();
+      channel.onmessage = null;
+      channel.close();
+      myAnno.destroy();
       viewer.destroy();
     };
   });

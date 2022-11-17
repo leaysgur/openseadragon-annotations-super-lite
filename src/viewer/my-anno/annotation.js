@@ -1,25 +1,25 @@
 import OpenSeadragon from "openseadragon";
-import { subscribe, publish } from "./events";
 
 /**
  * @typedef {{
  *   id: string;
  *   location: [x: number, y: number, w: number, h: number];
  * }} AnnotationInit
- *
- * @typedef {
- *   | "added"
- *   | "restored"
- *   | "moved"
- *   | "resized"
- *   | "removed"
- *   | "selected"
- * } AnnotationMessageType;
+ * @typedef {{
+ *    type:
+ *      | "overlay:click"
+ *      | "overlay:dragEnd"
+ *      | "removeHandle:click"
+ *      | "resizeHandle:dragEnd"
+ *    id: string;
+ * }} NotifyMessage
  */
 
 export class Annotation {
   /** @type {import("openseadragon").Viewer} viewer */
   #viewer;
+  /** @type {(type: NotifyMessage["type"]) => void} */
+  #notify;
   /** @type {string} */
   #id;
   /** @type {import("openseadragon").Rect} */
@@ -30,26 +30,24 @@ export class Annotation {
   #selected = false;
   /** @type {Map<string, import("openseadragon").MouseTracker>} */
   #mouseTrackers = new Map();
-  /** @type {Function[]} */
-  #disposers = [];
 
   /**
-   * @param {import("openseadragon").Viewer} viewer
+   * @param {{
+   *   viewer: import("openseadragon").Viewer;
+   *   port: MessagePort;
+   * }} ctx
    * @param {AnnotationInit} init
    */
-  constructor(viewer, { id, location }) {
+  constructor({ viewer, port }, { id, location }) {
     this.#viewer = viewer;
     this.#id = id;
     this.#location = new OpenSeadragon.Rect(...location);
+
+    this.#notify = (type) => port.postMessage({ type, id });
   }
 
   get selected() {
     return this.#selected;
-  }
-
-  /** @param {AnnotationMessageType} type */
-  #notify(type) {
-    publish(type, this);
   }
 
   /** @returns {AnnotationInit} */
@@ -76,23 +74,15 @@ export class Annotation {
       }
       this.#mouseTrackers.clear();
     });
-
-    this.#notify("removed");
-    for (const dispose of this.#disposers) {
-      dispose();
-    }
   }
 
-  /** @param {"added" | "restored"} trigger */
-  render(trigger) {
+  render() {
     Object.assign(this.#hostElement, {
       id: this.#id,
       className: "anno-overlay",
     });
 
     this.#viewer.addOverlay(this.#hostElement, this.#location);
-
-    this.#notify(trigger);
 
     return this;
   }
@@ -106,7 +96,6 @@ export class Annotation {
     this.#selected = bool;
     if (this.#selected) {
       this.#hostElement.classList.add("-selected");
-      this.#notify("selected");
     } else {
       this.#hostElement.classList.remove("-selected");
     }
@@ -115,21 +104,6 @@ export class Annotation {
   }
 
   activate() {
-    this.#disposers = [
-      subscribe("selected", (data) => {
-        if (data === this) {
-          return;
-        }
-        this.select(false);
-      }),
-      subscribe("added", (data) => {
-        if (data === this) {
-          return;
-        }
-        this.select(false);
-      }),
-    ];
-
     const overlay = this.#viewer.getOverlayById(this.#id);
     this.#mouseTrackers.set(
       "overlay",
@@ -144,7 +118,7 @@ export class Annotation {
             return;
           }
 
-          this.select(true);
+          this.#notify("overlay:click");
         },
 
         //
@@ -165,7 +139,7 @@ export class Annotation {
         // XXX: Should double check on releaseHandler?
         dragEndHandler: () => {
           this.#hostElement.classList.remove("-grabbing");
-          this.#notify("moved");
+          this.#notify("overlay:dragEnd");
         },
       }),
     );
@@ -189,7 +163,7 @@ export class Annotation {
             return;
           }
 
-          this.destroy();
+          this.#notify("removeHandle:click");
         },
       }),
     );
@@ -255,7 +229,7 @@ export class Annotation {
           },
           dragEndHandler: () => {
             $resizeHandle.classList.remove("-grabbing");
-            this.#notify("resized");
+            this.#notify("resizeHandle:dragEnd");
           },
         }),
       );
