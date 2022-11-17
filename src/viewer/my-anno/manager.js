@@ -169,7 +169,7 @@ export class AnnotationManager {
       return;
     }
 
-    const id = `anno:${Date.now()}`;
+    const id = `anno_${Date.now()}`;
     const point = this.#viewer.viewport.pointFromPixel(ev.position);
     const location = /** @type {[number, number, number, number]} */ ([
       point.x - 0.02, // centering
