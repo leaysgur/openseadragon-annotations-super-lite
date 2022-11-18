@@ -240,12 +240,12 @@
     margin: auto;
   }
   :global(.anno-overlay-remove-handle::after) {
-    content: "X";
+    content: "x";
     font-size: .5rem;
     color: #FFF;
   }
-  :global(.anno-overlay.-selected .anno-overlay-resize-handle),
-  :global(.anno-overlay.-selected .anno-overlay-remove-handle) {
+  :global(.anno-overlay.-selected:not(.-grabbing) .anno-overlay-resize-handle),
+  :global(.anno-overlay.-selected:not(.-grabbing) .anno-overlay-remove-handle) {
     display: flex;
     justify-content: center;
     align-items: center;
