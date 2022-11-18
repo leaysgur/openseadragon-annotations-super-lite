@@ -1,8 +1,9 @@
 {
-  "name": "osd-sample",
+  "name": "openseadragon-annotations-super-lite",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
+  "main": "./src/index.js",
   "scripts": {
     "lint": "npx rome check . --apply-suggested",
     "format": "npx rome format . --write",
