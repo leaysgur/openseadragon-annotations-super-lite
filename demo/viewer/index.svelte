@@ -1,8 +1,8 @@
 <script>
   import OpenSeadragon from "openseadragon";
   import { onMount, createEventDispatcher } from "svelte";
-  import { MyAnno } from "./my-anno/index";
-  /** @typedef {import("./my-anno/index").AnnotationEvent} AnnotationEvent */
+  import { MyAnno } from "../../src";
+  /** @typedef {import("../../src").AnnotationEvent} AnnotationEvent */
 
   /**
    * @typedef {{
