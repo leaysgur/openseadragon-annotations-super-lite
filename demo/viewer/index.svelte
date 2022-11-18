@@ -1,7 +1,7 @@
 <script>
   import OpenSeadragon from "openseadragon";
   import { onMount, createEventDispatcher } from "svelte";
-  import { MyAnno } from "../../src";
+  import { AnnotationsSuperLite } from "../../src";
   /** @typedef {import("../../src").AnnotationEvent} AnnotationEvent */
 
   /**
@@ -34,9 +34,7 @@
 
   $: {
     console.warn("UPDATE", annotations);
-    const json = JSON.stringify(annotations);
-    localStorage.setItem("ANNOTATIONS", json);
-    dispatch("annotations", json);
+    dispatch("annotations", JSON.stringify(annotations));
   }
 
   onMount(() => {
@@ -56,8 +54,9 @@
     // @ts-ignore: To apply custom styles
     viewer.navigator.displayRegion.classList.add("my-navigator-display-region");
 
-    const myAnno = new MyAnno(viewer);
-    myAnno.restore(Object.values(annotations)).activate();
+    const myAnno = new AnnotationsSuperLite(viewer)
+      .restore(Object.values(annotations))
+      .activate();
     console.warn(myAnno);
     const channel = new BroadcastChannel("my-anno");
 

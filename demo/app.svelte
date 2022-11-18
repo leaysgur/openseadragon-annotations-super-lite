@@ -3,7 +3,13 @@
   import Viewer from "./viewer/index.svelte";
 
   let json = "{}";
+
   const onClickCopy = () => navigator.clipboard.writeText(json);
+  /** @param {{ detail: string }} ev */
+  const onAnnotations = ({ detail }) => {
+    json = detail;
+    localStorage.setItem("ANNOTATIONS", json);
+  };
 
   /** @type {Promise<{ source: string; annotations: Record<string, any> }>} */
   let data = new Promise(() => {});
@@ -30,7 +36,7 @@
     {#await data}
       <p>Loading...</p>
     {:then { source, annotations }}
-      <Viewer {source} {annotations} on:annotations={({ detail }) => json = detail} />
+      <Viewer {source} {annotations} on:annotations={onAnnotations} />
     {:catch err}
       <p>{err.toString()}</p>
     {/await}
