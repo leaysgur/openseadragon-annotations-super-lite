@@ -8,6 +8,7 @@
     "lint": "npx rome check . --apply-suggested",
     "format": "npx rome format . --write",
     "dev": "vite",
+    "build": "vite build",
     "preview": "vite build && vite preview"
   },
   "keywords": [],
