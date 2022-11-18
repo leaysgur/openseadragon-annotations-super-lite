@@ -1,6 +1,6 @@
 <script>
   import OpenSeadragon from "openseadragon";
-  import { onMount } from "svelte";
+  import { onMount, createEventDispatcher } from "svelte";
   import { MyAnno } from "./my-anno/index";
   /** @typedef {import("./my-anno/index").AnnotationEvent} AnnotationEvent */
 
@@ -17,6 +17,8 @@
   /** @type {Record<string, AnnotationItem>} */
   export let annotations;
 
+  const dispatch = createEventDispatcher();
+
   /** @type {AnnotationItem | null} */
   let selected = null;
   /** @type {string} */
@@ -32,7 +34,9 @@
 
   $: {
     console.warn("UPDATE", annotations);
-    localStorage.setItem("ANNOTATIONS", JSON.stringify(annotations));
+    const json = JSON.stringify(annotations);
+    localStorage.setItem("ANNOTATIONS", json);
+    dispatch("annotations", json);
   }
 
   onMount(() => {
