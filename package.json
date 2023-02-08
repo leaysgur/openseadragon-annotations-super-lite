@@ -1,20 +1,25 @@
 {
   "name": "openseadragon-annotations-super-lite",
   "version": "0.0.1",
-  "description": "",
+  "description": "Super-lite-annotations implementation for openseadragon.",
   "type": "module",
-  "main": "./src/index.js",
+  "main": "./dist/openseadragon-annotations-super-lite.umd.js",
+	"module": "./dist/openseadragon-annotations-super-lite.module.mjs",
+	"exports": "./dist/openseadragon-annotations-super-lite.modern.mjs",
+  "types": "dist/openseadragon-annotations-super-lite.d.ts",
   "scripts": {
     "lint": "npx rome check . --apply-suggested",
-    "format": "npx rome format . --write"
+    "format": "npx rome format . --write",
+		"build": "microbundle ./src/index.js"
   },
-  "keywords": [],
+  "keywords": ["openseadragon", "annotations"],
   "author": "Yuji Sugiura",
   "license": "MIT",
   "devDependencies": {
-    "@types/openseadragon": "^3.0.4"
+    "@types/openseadragon": "^3.0.4",
+    "microbundle": "^0.15.1"
   },
-  "dependencies": {
+  "peerDependencies": {
     "openseadragon": "^3.1.0"
   }
 }
