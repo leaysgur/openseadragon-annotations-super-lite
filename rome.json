@@ -4,11 +4,11 @@
     "rules": {
       "recommended": true
     },
-    "ignore": ["dist"]
+    "ignore": ["dist", "docs"]
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
-    "ignore": ["dist"]
+    "ignore": ["dist", "docs"]
   }
 }
