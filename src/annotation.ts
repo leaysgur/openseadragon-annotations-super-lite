@@ -1,44 +1,37 @@
 import OpenSeadragon from "openseadragon";
+import type { Viewer, Rect, MouseTracker } from "openseadragon";
 
-/**
- * @typedef {{
- *   id: string;
- *   location: [x: number, y: number, w: number, h: number];
- * }} AnnotationInit
- * @typedef {{
- *    type:
- *      | "overlay:click"
- *      | "overlay:dragEnd"
- *      | "removeHandle:click"
- *      | "resizeHandle:dragEnd"
- *    id: string;
- * }} NotifyMessage
- */
+export type AnnotationInit = {
+  id: string;
+  location: [x: number, y: number, w: number, h: number];
+};
+
+export type NotifyMessage = {
+  type:
+    | "overlay:click"
+    | "overlay:dragEnd"
+    | "removeHandle:click"
+    | "resizeHandle:dragEnd";
+  id: string;
+};
 
 export class Annotation {
-  /** @type {import("openseadragon").Viewer} viewer */
-  #viewer;
-  /** @type {(type: NotifyMessage["type"]) => void} */
-  #notify;
-  /** @type {string} */
-  #id;
-  /** @type {import("openseadragon").Rect} */
-  #location;
+  #viewer: Viewer;
+  #notify: (type: NotifyMessage["type"]) => void;
+  #id: string;
+  #location: Rect;
 
-  /** @type {HTMLDivElement} */
-  #hostElement = document.createElement("div");
+  #hostElement: HTMLDivElement = document.createElement("div");
   #selected = false;
-  /** @type {Map<string, import("openseadragon").MouseTracker>} */
-  #mouseTrackers = new Map();
+  #mouseTrackers: Map<string, MouseTracker> = new Map();
 
-  /**
-   * @param {{
-   *   viewer: import("openseadragon").Viewer;
-   *   port: MessagePort;
-   * }} ctx
-   * @param {AnnotationInit} init
-   */
-  constructor({ viewer, port }, { id, location }) {
+  constructor(
+    { viewer, port }: {
+      viewer: Viewer;
+      port: MessagePort;
+    },
+    { id, location }: AnnotationInit,
+  ) {
     this.#viewer = viewer;
     this.#id = id;
     this.#location = new OpenSeadragon.Rect(...location);
@@ -50,8 +43,7 @@ export class Annotation {
     return this.#selected;
   }
 
-  /** @returns {AnnotationInit} */
-  toJSON() {
+  toJSON(): AnnotationInit {
     return {
       id: this.#id,
       location: [
@@ -87,8 +79,7 @@ export class Annotation {
     return this;
   }
 
-  /** @param {boolean} bool */
-  select(bool) {
+  select(bool: boolean) {
     if (this.#selected === bool) {
       return this;
     }
@@ -171,8 +162,7 @@ export class Annotation {
     //
     // RESIZE
     //
-    /** @type {[string, HTMLDivElement][]} */
-    const $resizeHandles = [
+    const $resizeHandles: [string, HTMLDivElement][] = [
       ["top-left", document.createElement("div")],
       ["top-right", document.createElement("div")],
       ["bottom-right", document.createElement("div")],

@@ -1,63 +1,50 @@
 import { Annotation } from "./annotation";
-/**
- * @typedef {import("./annotation").AnnotationInit} AnnotationInit
- * @typedef {import("./annotation").NotifyMessage} NotifyMessage
- */
+import type { Viewer, CanvasClickEvent, CanvasKeyEvent } from "openseadragon";
+import type { AnnotationInit, NotifyMessage } from "./annotation";
 
-/**
- * @typedef {{
- *   type: "annotation:added";
- *   data: AnnotationInit;
- * }} AnnotationAddedEvent
- * @typedef {{
- *   type: "annotation:updated";
- *   data: AnnotationInit;
- * }} AnnotationUpdatedEvent
- * @typedef {{
- *   type: "annotation:removed";
- *   data: { id: string }
- * }} AnnotationRemovedEvent
- * @typedef {{
- *   type: "annotation:selected";
- *   data: { id: string }
- * }} AnnotationSelectedEvent
- * @typedef {{
- *   type: "annotation:deselected";
- *   data: null;
- * }} AnnotationDeselectedEvent
- *
- * @typedef {(
- *   | AnnotationAddedEvent
- *   | AnnotationRemovedEvent
- *   | AnnotationUpdatedEvent
- *   | AnnotationSelectedEvent
- *   | AnnotationDeselectedEvent
- * )} AnnotationEvent
- */
+type AnnotationAddedEvent = {
+  type: "annotation:added";
+  data: AnnotationInit;
+};
+type AnnotationUpdatedEvent = {
+  type: "annotation:updated";
+  data: AnnotationInit;
+};
+type AnnotationRemovedEvent = {
+  type: "annotation:removed";
+  data: Pick<AnnotationInit, "id">;
+};
+type AnnotationSelectedEvent = {
+  type: "annotation:selected";
+  data: Pick<AnnotationInit, "id">;
+};
+type AnnotationDeselectedEvent = {
+  type: "annotation:deselected";
+  data: null;
+};
+export type AnnotationEvent =
+  | AnnotationAddedEvent
+  | AnnotationRemovedEvent
+  | AnnotationUpdatedEvent
+  | AnnotationSelectedEvent
+  | AnnotationDeselectedEvent;
 
 export class AnnotationManager {
-  /** @type {import("openseadragon").Viewer} */
-  #viewer;
-
-  /** @type {(event: AnnotationEvent) => void} */
-  #notify;
+  #viewer: Viewer;
+  #notify: (event: AnnotationEvent) => void;
   // ↑ App <-> AnnotationManager
   // ↓         AnnotationManager <-> Annotation
   #channel = new MessageChannel();
+  #annotations: Map<string, Annotation> = new Map();
 
-  /** @type {Map<string, Annotation>} */
-  #annotations = new Map();
-
-  /** @param {import("openseadragon").Viewer} viewer */
-  constructor(viewer) {
+  constructor(viewer: Viewer) {
     this.#viewer = viewer;
 
     const events = new BroadcastChannel("my-anno");
     this.#notify = (event) => events.postMessage(event);
   }
 
-  /** @param {AnnotationInit[]} inits */
-  restore(inits) {
+  restore(inits: AnnotationInit[]) {
     for (const init of inits) {
       if (!init) {
         continue;
@@ -113,8 +100,9 @@ export class AnnotationManager {
     this.#viewer.removeHandler("canvas-exit", this.#onViewerCanvasExit);
   }
 
-  /** @param {{ data: NotifyMessage }} message */
-  #onAnnotationNotifyMessage = ({ data: { type, id } }) => {
+  #onAnnotationNotifyMessage = ({
+    data: { type, id },
+  }: { data: NotifyMessage }) => {
     const annotation = this.#annotations.get(id);
     if (!annotation) {
       return;
@@ -154,8 +142,7 @@ export class AnnotationManager {
     }
   };
 
-  /** @param {import("openseadragon").CanvasClickEvent} ev */
-  #onViewerCanvasClick = (ev) => {
+  #onViewerCanvasClick = (ev: CanvasClickEvent) => {
     if (!ev.quick) {
       return;
     }
@@ -171,12 +158,12 @@ export class AnnotationManager {
 
     const id = `anno_${Date.now()}`;
     const point = this.#viewer.viewport.pointFromPixel(ev.position);
-    const location = /** @type {[number, number, number, number]} */ ([
+    const location: AnnotationInit["location"] = [
       point.x - 0.02, // centering
       point.y - 0.02, // centering
       0.04,
       0.04,
-    ]);
+    ];
 
     const annotation = this.#addAnnotation({ id, location }).activate();
     this.#notify({
@@ -187,8 +174,7 @@ export class AnnotationManager {
     this.#selectAnnotation(id);
   };
 
-  /** @param {import("openseadragon").CanvasKeyEvent} ev */
-  #onViewerCanvasKey = (ev) => {
+  #onViewerCanvasKey = (ev: CanvasKeyEvent) => {
     // @ts-ignore: It surely exists!!!
     switch (ev.originalEvent.key) {
       case "Backspace":
@@ -219,8 +205,7 @@ export class AnnotationManager {
   #onViewerCanvasEnter = () => this.#viewer.canvas.focus();
   #onViewerCanvasExit = () => this.#viewer.canvas.blur();
 
-  /** @param {AnnotationInit} init */
-  #addAnnotation(init) {
+  #addAnnotation(init: AnnotationInit) {
     const annotation = new Annotation(
       {
         viewer: this.#viewer,
@@ -233,15 +218,13 @@ export class AnnotationManager {
     return annotation;
   }
 
-  /** @param {string | null} targetId */
-  #selectAnnotation(targetId) {
+  #selectAnnotation(targetId: string | null) {
     for (const [id, annotation] of this.#annotations) {
       annotation.select(id === targetId);
     }
   }
 
-  /** @param {string} targetId */
-  #deleteAnnotation(targetId) {
+  #deleteAnnotation(targetId: string) {
     const annotation = this.#annotations.get(targetId);
     if (!annotation) {
       return;
