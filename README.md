@@ -22,12 +22,14 @@ import OpenSeadragon from "openseadragon";
 import { AnnotationsSuperLite } from "openseadragon-annotations-super-lite";
 import type { AnnotationEvent } from "openseadragon-annotations-super-lite";
 
+// Install plugin along with OSD core
 const viewer = new OpenSeadragon.Viewer({ /* ... */ });
+const myAnno = new AnnotationsSuperLite(viewer);
 
-// Install plugin
-const myAnno = new AnnotationsSuperLite(viewer).activate();
+// [Optional] Register event handlers
+myAnno.activate();
 
-// Communicate with plugin via BroadcastChannel API
+// [Optional] Communicate with plugin via BroadcastChannel API
 const channel = new BroadcastChannel("my-anno");
 channel.onmessage = ({ data: message }: MessageEvent<AnnotationEvent>) => {
   switch (message.type) {
@@ -41,4 +43,25 @@ channel.onmessage = ({ data: message }: MessageEvent<AnnotationEvent>) => {
     case "annotation:deselected": { }
   }
 };
+
+// [Optional] Restore previous annotations
+const annotations = [{
+  id: "anno_1675845237828",
+  location: [0, 0, 0.04, 0.04],
+}]
+myAnno.restore(annotations);
+
+// Destroy instance
+channel.onmessage = null;
+channel.close();
+myAnno.destroy();
+viewer.destroy();
 ```
+
+## Styling
+
+This plugin does not offer default styles for created annotations.
+
+You need to apply your CSS for related classes like `.anno-overlay`, `.anno-overlay-resize-handle` and so on.
+
+See demo source code above for more details.
