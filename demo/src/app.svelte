@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import Viewer from "./viewer/index.svelte";
+  import * as pkg from "../package.json";
 
   let json = "{}";
 
@@ -28,7 +29,7 @@
 
 <div>
   <header>
-    <h1>Demo</h1>
+    <h1>OSD-ASL Demo v{pkg.version}</h1>
     <button on:click={onClickCopy}>JSONをクリップボードにコピー</button>
   </header>
 
