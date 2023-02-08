@@ -6,7 +6,7 @@
   "main": "./dist/openseadragon-annotations-super-lite.umd.js",
 	"module": "./dist/openseadragon-annotations-super-lite.module.mjs",
 	"exports": "./dist/openseadragon-annotations-super-lite.modern.mjs",
-  "types": "./dist/openseadragon-annotations-super-lite.d.ts",
+  "types": "./dist/index.d.ts",
   "files": ["dist"],
   "scripts": {
     "lint": "npx rome check . --apply-suggested",
