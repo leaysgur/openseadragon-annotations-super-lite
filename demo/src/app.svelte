@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import Viewer from "./viewer/index.svelte";
-  import * as pkg from "../package.json";
+  import * as pkg from "../../package.json";
 
   let json = "{}";
 
