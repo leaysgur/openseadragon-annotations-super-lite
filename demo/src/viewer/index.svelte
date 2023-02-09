@@ -117,8 +117,6 @@
   <div class="my-viewer" id="osd-viewer"></div>
   <div class="my-navigator" id="osd-navigator" style="height: 100%; width: 100%;"></div>
   <div class="my-editor">
-    <p>Annotation</p>
-    <hr>
     {#if selected === null}
       <div>Not selected</div>
     {:else}
@@ -127,7 +125,6 @@
         <input type="text" id="labels" placeholder="foo, bar" bind:value={draftLabel}>
       </div>
     {/if}
-    <hr>
     <pre>{JSON.stringify(selected, null, 2)}</pre>
   </div>
 </div>
@@ -161,11 +158,6 @@
     font-size: 0.7rem;
   }
 
-  .my-editor hr {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-top: none;
-    margin: 16px -16px;
-  }
   .my-editor label {
     display: block;
     margin-bottom: 8px;

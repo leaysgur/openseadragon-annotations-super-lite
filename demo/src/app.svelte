@@ -30,7 +30,7 @@
 <div>
   <header>
     <h1>OSD-ASL Demo v{pkg.version}</h1>
-    <button on:click={onClickCopy}>JSONをクリップボードにコピー</button>
+    <button on:click={onClickCopy}>Copy JSON to clipboard</button>
   </header>
 
   <main>
