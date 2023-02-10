@@ -1,6 +1,6 @@
 {
   "name": "openseadragon-annotations-super-lite",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Super-lite-annotations implementation for openseadragon.",
   "type": "module",
   "main": "./dist/openseadragon-annotations-super-lite.umd.js",
