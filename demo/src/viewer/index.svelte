@@ -38,7 +38,7 @@
   }
 
   onMount(() => {
-    const viewer = new OpenSeadragon.Viewer({
+    const viewer = new OpenSeadragon({
       id: "osd-viewer",
 
       showNavigationControl: false,
