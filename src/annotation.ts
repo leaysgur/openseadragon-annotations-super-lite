@@ -74,7 +74,15 @@ export class Annotation {
       className: "anno-overlay",
     });
 
-    this.#viewer.addOverlay(this.#hostElement, this.#location);
+    // XXX: Not sure but this shorthand breaks `vite build`...
+    // `instanceof` check used by OpenSeadragon suddenly stop working
+    // this.#viewer.addOverlay(this.#hostElement, this.#location);
+    this.#viewer.addOverlay({
+      element: this.#hostElement,
+      location: this.#location.getTopLeft(),
+      width: this.#location.width,
+      height: this.#location.height,
+    });
 
     return this;
   }
