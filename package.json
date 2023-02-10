@@ -30,10 +30,10 @@
   },
   "homepage": "https://github.com/leader22/openseadragon-annotations-super-lite#readme",
   "devDependencies": {
-    "@types/openseadragon": "^3.0.4",
+    "@types/openseadragon": "^3.0.5",
     "microbundle": "^0.15.1"
   },
   "peerDependencies": {
-    "openseadragon": "^3.1.0"
+    "openseadragon": "^3.0.0 || ^4.0.0"
   }
 }
