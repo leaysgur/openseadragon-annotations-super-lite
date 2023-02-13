@@ -1,6 +1,7 @@
 <script>
   import OpenSeadragon from "openseadragon";
   import { onMount, createEventDispatcher } from "svelte";
+  import Portal from "svelte-portal";
   import { AnnotationsSuperLite } from "../../../src";
   /** @typedef {import("../../../src").AnnotationEvent} AnnotationEvent */
 
@@ -26,7 +27,10 @@
 
   $: {
     if (selected !== null) {
-      const labels = draftLabel.split(",").map((l) => l.trim()).filter(Boolean);
+      const labels = draftLabel
+        .split(",")
+        .map((l) => l.trim())
+        .filter(Boolean);
       annotations[selected.id].labels = labels;
       selected.labels = labels;
     }
@@ -79,7 +83,7 @@
           const item = {
             ...annotations[data.id],
             ...data,
-          }
+          };
           annotations[data.id] = item;
           if (selected?.id === data.id) selected = item;
           break;
@@ -114,30 +118,49 @@
 </script>
 
 <div class="main">
-  <div class="my-viewer" id="osd-viewer"></div>
-  <div class="my-navigator" id="osd-navigator" style="height: 100%; width: 100%;"></div>
+  <div class="my-viewer" id="osd-viewer" />
+  <div
+    class="my-navigator"
+    id="osd-navigator"
+    style="height: 100%; width: 100%;"
+  />
   <div class="my-editor">
     {#if selected === null}
       <div>Not selected</div>
     {:else}
       <div>
         <label for="labels">Labels</label>
-        <input type="text" id="labels" placeholder="foo, bar" bind:value={draftLabel}>
+        <input
+          type="text"
+          id="labels"
+          placeholder="foo, bar"
+          bind:value={draftLabel}
+        />
       </div>
     {/if}
     <pre>{JSON.stringify(selected, null, 2)}</pre>
   </div>
 </div>
 
+{#each Object.values(annotations) as annotation}
+  <Portal target="#{annotation.id}" hidden>
+    <div class="my-labels">
+      {#each annotation.labels as label}
+        <span>{label}</span>
+      {/each}
+    </div>
+  </Portal>
+{/each}
+
 <style>
   .main {
     display: grid;
     grid-template:
       "viewer navigator" 250px
-      "viewer editor"    1fr
-    /  1fr    250px;
+      "viewer editor" 1fr
+      / 1fr 250px;
     height: 100%;
-    background-color: #2C2C2C;
+    background-color: #2c2c2c;
   }
 
   .my-viewer {
@@ -150,7 +173,7 @@
   }
   .my-editor {
     grid-area: editor;
-    color: #FFF;
+    color: #fff;
     padding: 16px;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     border-left: 1px solid rgba(255, 255, 255, 0.2);
@@ -167,7 +190,7 @@
     box-sizing: border-box;
   }
   .my-editor pre {
-    font-size: .7rem;
+    font-size: 0.7rem;
   }
 
   :global(.my-navigator-display-region) {
@@ -176,7 +199,7 @@
 
   :global(.osdasl-host) {
     box-sizing: border-box;
-    border: 2px solid #001AFF;
+    border: 2px solid #001aff;
     outline: 1px solid rgba(255, 255, 255, 0.8);
     cursor: move;
     will-change: width, height, top, left;
@@ -190,8 +213,8 @@
   }
   :global(.osdasl-resize-handle) {
     display: none;
-    background-color: #FFF;
-    border: 1px solid #001AFF;
+    background-color: #fff;
+    border: 1px solid #001aff;
     box-sizing: border-box;
     width: 12px; /* Never scales */
     height: 12px;
@@ -222,7 +245,7 @@
     cursor: pointer;
     width: 16px; /* Never scales */
     height: 16px;
-    background: #2C2C2C;
+    background: #2c2c2c;
     border-radius: 2px;
     position: absolute;
     bottom: -24px;
@@ -232,13 +255,27 @@
   }
   :global(.osdasl-remove-handle::after) {
     content: "x";
-    font-size: .5rem;
-    color: #FFF;
+    font-size: 0.5rem;
+    color: #fff;
   }
   :global(.osdasl-host.-selected:not(.-grabbing) .osdasl-resize-handle),
   :global(.osdasl-host.-selected:not(.-grabbing) .osdasl-remove-handle) {
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+
+  :global(.osdasl-host .my-labels) {
+    position: absolute;
+    top: -35px;
+    left: -5px;
+    display: flex;
+    gap: 4px;
+  }
+  :global(.osdasl-host .my-labels span) {
+    padding: 2px 4px;
+    background-color: #fff;
+    white-space: nowrap;
+    font-size: 14px;
   }
 </style>
