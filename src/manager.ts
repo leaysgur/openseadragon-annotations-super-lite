@@ -39,8 +39,8 @@ export class AnnotationManager {
   #viewer: Viewer;
   #options: ManagerOptions;
   #notify: (event: AnnotationEvent) => void;
-  // ↑ App <-> AnnotationManager
-  // ↓         AnnotationManager <-> Annotation
+  // ↑ UserApp <-> AnnotationManager
+  // ↓             AnnotationManager <-> Annotations
   #channel = new MessageChannel();
   #annotations: Map<string, Annotation> = new Map();
 
@@ -125,7 +125,7 @@ export class AnnotationManager {
         this.#deleteAnnotation(id);
         break;
       }
-      case "overlay:click": {
+      case "host:click": {
         this.#notify({
           type: "annotation:selected",
           data: { id },
@@ -140,7 +140,7 @@ export class AnnotationManager {
         });
         break;
       }
-      case "overlay:dragEnd": {
+      case "host:dragEnd": {
         this.#notify({
           type: "annotation:updated",
           data: annotation.toJSON(),
@@ -155,6 +155,7 @@ export class AnnotationManager {
       return;
     }
 
+    // Just deselect it if annotation is selected
     if ([...this.#annotations.values()].some((a) => a.selected)) {
       this.#selectAnnotation(null);
       this.#notify({
@@ -164,6 +165,7 @@ export class AnnotationManager {
       return;
     }
 
+    // Otherwise add new annotation and select it
     const id = `osdasl_${Date.now()}`;
     const point = this.#viewer.viewport.pointFromPixel(ev.position);
     const location: AnnotationInit["location"] = [

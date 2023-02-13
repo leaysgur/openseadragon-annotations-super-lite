@@ -8,8 +8,8 @@ export type AnnotationInit = {
 
 export type NotifyMessage = {
   type:
-    | "overlay:click"
-    | "overlay:dragEnd"
+    | "host:click"
+    | "host:dragEnd"
     | "removeHandle:click"
     | "resizeHandle:dragEnd";
   id: string;
@@ -119,7 +119,7 @@ export class Annotation {
             return;
           }
 
-          this.#notify("overlay:click");
+          this.#notify("host:click");
         },
 
         //
@@ -140,7 +140,7 @@ export class Annotation {
         // XXX: Should double check on releaseHandler?
         dragEndHandler: () => {
           this.#hostElement.classList.remove("-grabbing");
-          this.#notify("overlay:dragEnd");
+          this.#notify("host:dragEnd");
         },
       }),
     );
