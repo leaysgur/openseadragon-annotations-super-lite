@@ -15,6 +15,8 @@ export type NotifyMessage = {
   id: string;
 };
 
+const BASE_CLASSNAME = "osdasl";
+
 export class Annotation {
   #viewer: Viewer;
   #notify: (type: NotifyMessage["type"]) => void;
@@ -71,7 +73,7 @@ export class Annotation {
   render() {
     Object.assign(this.#hostElement, {
       id: this.#id,
-      className: "anno-overlay",
+      className: `${BASE_CLASSNAME}-host`,
     });
 
     // XXX: Not sure but this shorthand breaks `vite build`...
@@ -148,7 +150,7 @@ export class Annotation {
     //
     const $removeHandle = document.createElement("div");
     Object.assign($removeHandle, {
-      className: "anno-overlay-remove-handle",
+      className: `${BASE_CLASSNAME}-remove-handle`,
     });
     this.#hostElement.append($removeHandle);
 
@@ -179,7 +181,7 @@ export class Annotation {
 
     for (const [pos, $resizeHandle] of $resizeHandles) {
       Object.assign($resizeHandle, {
-        className: `anno-overlay-resize-handle anno-overlay-resize-handle-${pos}`,
+        className: `${BASE_CLASSNAME}-resize-handle ${BASE_CLASSNAME}-resize-handle-${pos}`,
       });
       this.#hostElement.append($resizeHandle);
 

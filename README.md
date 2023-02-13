@@ -2,6 +2,40 @@
 
 Super-lite-annotations implementation for openseadragon.
 
+This plugin provides a thin layer to manage openseadragon [Overlays](https://openseadragon.github.io/examples/ui-overlays/) for image annotation usage.
+
+## Features
+
+- 0 deps, under 500 lines of code
+- Basic features
+  - Click to render openseadragon Overlays as annotation
+  - Move by drag
+  - Resizing
+  - Delete button
+  - Export and restore annotations
+
+⚠️ This plugin does not offer default styles for created annotation overlays.
+
+You need to apply your CSS for related classes.
+
+```css
+.osdasl-host {
+  box-sizing: border-box;
+  outline: 1px solid rgba(255, 255, 255, 0.8);
+  cursor: move;
+  will-change: width, height, top, left;
+}
+.osdasl-host:hover {
+  background-color: rgba(0, 255, 26, 0.2);
+}
+.osdals-host.-grabbing {
+  background-color: transparent;
+  cursor: grabbing;
+}
+
+/* and so on... */
+```
+
 ## Install
 
 ```
@@ -9,13 +43,9 @@ npm i openseadragon
 npm i openseadragon-annotations-super-lite
 ```
 
-TypeScript definitions are included.
+TypeScript definitions are included. ✌️
 
-## How to use
-
-Check minimal [demo](https://leader22.github.io/openseadragon-annotations-super-lite/) and it's [code](https://github.com/leader22/openseadragon-annotations-super-lite/blob/main/demo/src/viewer/index.svelte).
-
-This demo using Svelte for client UI, but plugin itself does not require any deps.
+## Usage
 
 ```ts
 import OpenSeadragon from "openseadragon";
@@ -26,11 +56,19 @@ import type { AnnotationEvent } from "openseadragon-annotations-super-lite";
 const viewer = new OpenSeadragon.Viewer({ /* ... */ });
 const myAnno = new AnnotationsSuperLite(viewer);
 
+
+// [Optional] Restore previous annotations
+const annotations = [{
+  id: "osdasl_1675845237828",
+  location: [0, 0, 0.04, 0.04],
+}]
+myAnno.restore(annotations);
+
 // [Optional] Register event handlers
 myAnno.activate();
 
 // [Optional] Communicate with plugin via BroadcastChannel API
-const channel = new BroadcastChannel("my-anno");
+const channel = new BroadcastChannel("osdasl");
 channel.onmessage = ({ data: message }: MessageEvent<AnnotationEvent>) => {
   switch (message.type) {
     case "annotation:added": {
@@ -44,13 +82,6 @@ channel.onmessage = ({ data: message }: MessageEvent<AnnotationEvent>) => {
   }
 };
 
-// [Optional] Restore previous annotations
-const annotations = [{
-  id: "anno_1675845237828",
-  location: [0, 0, 0.04, 0.04],
-}]
-myAnno.restore(annotations);
-
 // Destroy instance
 channel.onmessage = null;
 channel.close();
@@ -58,10 +89,7 @@ myAnno.destroy();
 viewer.destroy();
 ```
 
-## Styling
+See also [demo](https://leader22.github.io/openseadragon-annotations-super-lite/) and it's [code](https://github.com/leader22/openseadragon-annotations-super-lite/blob/main/demo/src/viewer/index.svelte).
 
-This plugin does not offer default styles for created annotations.
+This demo using Svelte for client UI, but plugin itself does not require any deps.
 
-You need to apply your CSS for related classes like `.anno-overlay`, `.anno-overlay-resize-handle` and so on.
-
-See demo source code above for more details.

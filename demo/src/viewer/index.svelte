@@ -54,7 +54,7 @@
     // @ts-ignore: To apply custom styles
     viewer.navigator.displayRegion.classList.add("my-navigator-display-region");
 
-    const myAnno = new AnnotationsSuperLite(viewer)
+    const myAnno = new AnnotationsSuperLite(viewer, { channelName: "my-anno" })
       .restore(Object.values(annotations))
       .activate();
     console.warn(myAnno);
@@ -174,21 +174,21 @@
     box-shadow: rgba(0, 0, 0, 0.7) 0 0 0 1000px;
   }
 
-  :global(.anno-overlay) {
+  :global(.osdasl-host) {
     box-sizing: border-box;
     border: 2px solid #001AFF;
     outline: 1px solid rgba(255, 255, 255, 0.8);
     cursor: move;
     will-change: width, height, top, left;
   }
-  :global(.anno-overlay:hover) {
+  :global(.osdasl-host:hover) {
     background-color: rgba(0, 26, 255, 0.2);
   }
-  :global(.anno-overlay.-grabbing) {
+  :global(.osd-als-host.-grabbing) {
     background-color: transparent;
     cursor: grabbing;
   }
-  :global(.anno-overlay-resize-handle) {
+  :global(.osdasl-resize-handle) {
     display: none;
     background-color: #FFF;
     border: 1px solid #001AFF;
@@ -197,27 +197,27 @@
     height: 12px;
     position: absolute;
   }
-  :global(.anno-overlay-resize-handle-top-left) {
+  :global(.osdasl-resize-handle-top-left) {
     cursor: nwse-resize;
     top: -6px;
     left: -6px;
   }
-  :global(.anno-overlay-resize-handle-top-right) {
+  :global(.osdasl-resize-handle-top-right) {
     cursor: nesw-resize;
     top: -6px;
     right: -6px;
   }
-  :global(.anno-overlay-resize-handle-bottom-right) {
+  :global(.osdasl-resize-handle-bottom-right) {
     cursor: nwse-resize;
     bottom: -6px;
     right: -6px;
   }
-  :global(.anno-overlay-resize-handle-bottom-left) {
+  :global(.osdasl-resize-handle-bottom-left) {
     cursor: nesw-resize;
     bottom: -6px;
     left: -6px;
   }
-  :global(.anno-overlay-remove-handle) {
+  :global(.osdasl-remove-handle) {
     display: none;
     cursor: pointer;
     width: 16px; /* Never scales */
@@ -230,13 +230,13 @@
     right: 0;
     margin: auto;
   }
-  :global(.anno-overlay-remove-handle::after) {
+  :global(.osdasl-remove-handle::after) {
     content: "x";
     font-size: .5rem;
     color: #FFF;
   }
-  :global(.anno-overlay.-selected:not(.-grabbing) .anno-overlay-resize-handle),
-  :global(.anno-overlay.-selected:not(.-grabbing) .anno-overlay-remove-handle) {
+  :global(.osdasl-host.-selected:not(.-grabbing) .osdasl-resize-handle),
+  :global(.osdasl-host.-selected:not(.-grabbing) .osdasl-remove-handle) {
     display: flex;
     justify-content: center;
     align-items: center;

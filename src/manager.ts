@@ -32,7 +32,7 @@ export type AnnotationEvent =
 export type ManagerOptions = typeof defaultManagerOptions;
 
 const defaultManagerOptions = {
-  channelName: "osd-asl",
+  channelName: "osdasl",
 };
 
 export class AnnotationManager {
@@ -164,7 +164,7 @@ export class AnnotationManager {
       return;
     }
 
-    const id = `anno_${Date.now()}`;
+    const id = `osdasl_${Date.now()}`;
     const point = this.#viewer.viewport.pointFromPixel(ev.position);
     const location: AnnotationInit["location"] = [
       point.x - 0.02, // centering
