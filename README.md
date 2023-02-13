@@ -8,11 +8,11 @@ This plugin provides a thin layer to manage openseadragon [Overlays](https://ope
 
 - 0 deps, under 500 lines of code
 - Basic features
-  - Click to render openseadragon Overlays as annotation
+  - Click viewer to render openseadragon Overlays as annotation
   - Move by drag
   - Resizing
   - Delete button
-  - Export and restore annotations
+- Export and restore annotations
 
 ⚠️ This plugin does not offer default styles for created annotation overlays.
 
@@ -74,6 +74,7 @@ channel.onmessage = ({ data: message }: MessageEvent<AnnotationEvent>) => {
     case "annotation:added": {
       message.data.id;
       message.data.location;
+      // Save it if needed
     }
     case "annotation:updated": { }
     case "annotation:removed": { }
@@ -81,6 +82,7 @@ channel.onmessage = ({ data: message }: MessageEvent<AnnotationEvent>) => {
     case "annotation:deselected": { }
   }
 };
+
 
 // Destroy instance
 channel.onmessage = null;
