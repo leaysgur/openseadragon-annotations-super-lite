@@ -29,18 +29,26 @@ export type AnnotationEvent =
   | AnnotationSelectedEvent
   | AnnotationDeselectedEvent;
 
+export type ManagerOptions = typeof defaultManagerOptions;
+
+const defaultManagerOptions = {
+  channelName: "osd-asl",
+};
+
 export class AnnotationManager {
   #viewer: Viewer;
+  #options: ManagerOptions;
   #notify: (event: AnnotationEvent) => void;
   // ↑ App <-> AnnotationManager
   // ↓         AnnotationManager <-> Annotation
   #channel = new MessageChannel();
   #annotations: Map<string, Annotation> = new Map();
 
-  constructor(viewer: Viewer) {
+  constructor(viewer: Viewer, options: ManagerOptions) {
     this.#viewer = viewer;
+    this.#options = { ...defaultManagerOptions, ...options };
 
-    const events = new BroadcastChannel("my-anno");
+    const events = new BroadcastChannel(this.#options.channelName);
     this.#notify = (event) => events.postMessage(event);
   }
 
