@@ -1,6 +1,6 @@
 # openseadragon-annotations-super-lite
 
-Super-lite-annotations implementation for openseadragon.
+Super-lite-annotations plugin for openseadragon.
 
 This plugin provides a thin layer to manage openseadragon [Overlays](https://openseadragon.github.io/examples/ui-overlays/) for image annotation usage.
 
@@ -12,7 +12,7 @@ This plugin provides a thin layer to manage openseadragon [Overlays](https://ope
   - Move by drag
   - Resizing
   - Delete button
-- Export and restore annotations
+- Export and restore annotations through JSON
 
 ⚠️ This plugin does not offer default styles for created annotation overlays.
 
@@ -49,12 +49,11 @@ TypeScript definitions are included. ✌️
 
 ```ts
 import OpenSeadragon from "openseadragon";
-import { AnnotationsSuperLite } from "openseadragon-annotations-super-lite";
-import type { AnnotationEvent } from "openseadragon-annotations-super-lite";
+import { AnnotationsSuperLite, type AnnotationEvent } from "openseadragon-annotations-super-lite";
 
 // Install plugin along with OSD core
 const viewer = new OpenSeadragon.Viewer({ /* ... */ });
-const myAnno = new AnnotationsSuperLite(viewer);
+const myAnno = new AnnotationsSuperLite(viewer, { channelName: "osdasl" });
 
 
 // [Optional] Restore previous annotations
@@ -74,7 +73,7 @@ channel.onmessage = ({ data: message }: MessageEvent<AnnotationEvent>) => {
     case "annotation:added": {
       message.data.id;
       message.data.location;
-      // Save it if needed
+      // Save it if needed and restore later
     }
     case "annotation:updated": { }
     case "annotation:removed": { }
