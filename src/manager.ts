@@ -39,8 +39,8 @@ export class AnnotationManager {
   #viewer: Viewer;
   #options: ManagerOptions;
   #notify: (event: AnnotationEvent) => void;
-  // ↑ UserApp <-> AnnotationManager
-  // ↓             AnnotationManager <-> Annotations
+  // ↑ UserApp <- AnnotationManager
+  // ↓            AnnotationManager <- Annotations
   #channel = new MessageChannel();
   #annotations: Map<string, Annotation> = new Map();
 
