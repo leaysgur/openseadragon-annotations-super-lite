@@ -9,19 +9,25 @@
   /** @param {{ detail: string }} ev */
   const onAnnotations = ({ detail }) => {
     json = detail;
-    localStorage.setItem("ANNOTATIONS", json);
+    localStorage.setItem("OSD-ASL/ANNOTATIONS", json);
   };
 
   /** @type {Promise<{ source: string; annotations: Record<string, any> }>} */
   let data = new Promise(() => {});
   onMount(() => {
+    const savedVersion = localStorage.getItem("OSD-ASL/VERSION") ?? "0.0.0";
+    if (savedVersion !== pkg.version) {
+      localStorage.removeItem("OSD-ASL/ANNOTATIONS");
+    }
+    localStorage.setItem("OSD-ASL/VERSION", pkg.version);
+
     // XXX: Maybe fetch()
     data = new Promise((resolve) => {
       setTimeout(() => resolve({
         /* source: "http://openseadragon.github.io/example-images/highsmith/highsmith.dzi", */
         /* source: "http://clst.multimodal.riken.jp/CLST_ViewerData/EMV_028_161217SEM_RatKidney/DZI_images/DZI_IMAGE.dzi", */
         source: "https://microdraw.pasteur.fr/bigbrain/bigbrain.dzi",
-        annotations: JSON.parse(localStorage.getItem("ANNOTATIONS") ?? "{}"),
+        annotations: JSON.parse(localStorage.getItem("OSD-ASL/ANNOTATIONS") ?? "{}"),
       }), 500);
     });
   });
