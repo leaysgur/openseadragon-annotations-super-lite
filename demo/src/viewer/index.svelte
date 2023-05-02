@@ -10,6 +10,7 @@
    *   id: string;
    *   location: [number, number, number, number];
    *   labels: string[];
+   *   color: string;
    * }} AnnotationItem
    */
 
@@ -18,16 +19,17 @@
   /** @type {Record<string, AnnotationItem>} */
   export let annotations;
 
-  const dispatch = createEventDispatcher();
-
   /** @type {AnnotationItem | null} */
   let selected = null;
-  /** @type {string} */
-  let draftLabel = "";
+  /** @type {{ label: string; color: string }} */
+  let draft = {
+    label: "",
+    color: "",
+  };
 
   $: {
     if (selected !== null) {
-      const labels = draftLabel
+      const labels = draft.label
         .split(",")
         .map((l) => l.trim())
         .filter(Boolean);
@@ -35,7 +37,18 @@
       selected.labels = labels;
     }
   }
+  $: {
+    if (selected !== null) {
+      annotations[selected.id].color = draft.color;
+      selected.color = draft.color;
 
+      // Or use Portal if possible
+      const $host = document.getElementById(selected.id);
+      $host?.style.setProperty("--COLOR", draft.color);
+    }
+  }
+
+  const dispatch = createEventDispatcher();
   $: {
     console.warn("UPDATE", annotations);
     dispatch("annotations", JSON.stringify(annotations));
@@ -62,8 +75,14 @@
       .restore(Object.values(annotations))
       .activate();
     console.warn(myAnno);
-    const channel = new BroadcastChannel("my-anno");
 
+    // Use Protal if possible
+    for (const { id, color } of Object.values(annotations)) {
+      const $host = document.getElementById(id);
+      $host?.style.setProperty("--COLOR", color);
+    }
+
+    const channel = new BroadcastChannel("my-anno");
     /** @param {MessageEvent<AnnotationEvent>} ev */
     channel.onmessage = ({ data: message }) => {
       // Do not destruct too early for type guards
@@ -76,7 +95,7 @@
           };
           annotations[data.id] = item;
           selected = item;
-          draftLabel = "";
+          draft = { label: "", color: "" };
           break;
         }
         case "annotation:updated": {
@@ -89,20 +108,19 @@
           break;
         }
         case "annotation:removed": {
-          // @ts-ignore
-          annotations[data.id] = undefined;
+          delete annotations[data.id];
           if (selected?.id === data.id) selected = null;
-          draftLabel = "";
+          draft = { label: "", color: "" };
           break;
         }
         case "annotation:selected": {
           selected = annotations[data.id];
-          draftLabel = selected.labels.join(", ");
+          draft = { label: selected.labels.join(", "), color: selected.color };
           break;
         }
         case "annotation:deselected": {
           selected = null;
-          draftLabel = "";
+          draft = { label: "", color: "" };
           break;
         }
       }
@@ -134,8 +152,16 @@
           type="text"
           id="labels"
           placeholder="foo, bar"
-          bind:value={draftLabel}
+          bind:value={draft.label}
         />
+        <hr />
+        <div>Color</div>
+        <select bind:value={draft.color}>
+          <option value="" disabled>Not selected</option>
+          <option value="tomato">tomato</option>
+          <option value="lime">lime</option>
+          <option value="aqua">aqua</option>
+        </select>
       </div>
     {/if}
     <pre>{JSON.stringify(selected, null, 2)}</pre>
@@ -198,23 +224,24 @@
   }
 
   :global(.osdasl-host) {
+    --COLOR: #001aff;
     box-sizing: border-box;
-    border: 2px solid #001aff;
+    border: 2px solid var(--COLOR);
     outline: 1px solid rgba(255, 255, 255, 0.8);
     cursor: move;
     will-change: width, height, top, left;
   }
   :global(.osdasl-host:hover) {
-    background-color: rgba(0, 26, 255, 0.2);
+    border-style: dashed;
+    outline-style: dashed;
   }
   :global(.osd-als-host.-grabbing) {
-    background-color: transparent;
     cursor: grabbing;
   }
   :global(.osdasl-resize-handle) {
     display: none;
     background-color: #fff;
-    border: 1px solid #001aff;
+    border: 1px solid var(--COLOR);
     box-sizing: border-box;
     width: 12px; /* Never scales */
     height: 12px;
@@ -252,6 +279,9 @@
     left: 0;
     right: 0;
     margin: auto;
+  }
+  :global(.osdasl-remove-handle:hover) {
+    background: #5c5c5c;
   }
   :global(.osdasl-remove-handle::after) {
     content: "x";
