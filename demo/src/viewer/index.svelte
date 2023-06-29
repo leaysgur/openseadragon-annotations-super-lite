@@ -235,7 +235,7 @@
     border-style: dashed;
     outline-style: dashed;
   }
-  :global(.osd-als-host.-grabbing) {
+  :global(.osdasl-host.-grabbing) {
     cursor: grabbing;
   }
   :global(.osdasl-resize-handle) {
