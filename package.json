@@ -2,11 +2,15 @@
   "name": "openseadragon-annotations-super-lite",
   "version": "0.0.6",
   "description": "Super-lite-annotations implementation for openseadragon.",
-  "type": "module",
-  "main": "./dist/openseadragon-annotations-super-lite.umd.js",
-  "module": "./dist/openseadragon-annotations-super-lite.module.mjs",
-  "exports": "./dist/openseadragon-annotations-super-lite.modern.mjs",
-  "types": "./dist/index.d.ts",
+  "main": "dist/index.js",
+  "umd:main": "dist/index.umd.js",
+  "module": "dist/index.mjs",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "require": "./dist/index.js",
+    "default": "./dist/index.modern.mjs"
+  },
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
