@@ -235,7 +235,7 @@
     border-style: dashed;
     outline-style: dashed;
   }
-  :global(.osdasl-host.-grabbing) {
+  :global(.osdasl-host.-dragging) {
     cursor: grabbing;
   }
   :global(.osdasl-resize-handle) {
@@ -288,8 +288,8 @@
     font-size: 0.5rem;
     color: #fff;
   }
-  :global(.osdasl-host.-selected:not(.-grabbing) .osdasl-resize-handle),
-  :global(.osdasl-host.-selected:not(.-grabbing) .osdasl-remove-handle) {
+  :global(.osdasl-host.-selected:not(.-dragging) .osdasl-resize-handle),
+  :global(.osdasl-host.-selected:not(.-dragging) .osdasl-remove-handle) {
     display: flex;
     justify-content: center;
     align-items: center;

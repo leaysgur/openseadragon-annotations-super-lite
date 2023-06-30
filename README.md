@@ -28,7 +28,7 @@ You need to apply your CSS for related classes.
 .osdasl-host:hover {
   background-color: rgba(0, 255, 26, 0.2);
 }
-.osdals-host.-grabbing {
+.osdals-host.-dragging {
   background-color: transparent;
   cursor: grabbing;
 }

@@ -126,7 +126,7 @@ export class Annotation {
         // DRAG
         //
         dragHandler: (ev) => {
-          this.#hostElement.classList.add("-grabbing");
+          this.#hostElement.classList.add("-dragging");
 
           // @ts-ignore: It surely exists!!!
           const delta = this.#viewer.viewport.deltaPointsFromPixels(ev.delta);
@@ -139,7 +139,7 @@ export class Annotation {
         },
         // XXX: Should double check on releaseHandler?
         dragEndHandler: () => {
-          this.#hostElement.classList.remove("-grabbing");
+          this.#hostElement.classList.remove("-dragging");
           this.#notify("host:dragEnd");
         },
       }),
@@ -190,7 +190,7 @@ export class Annotation {
         new OpenSeadragon.MouseTracker({
           element: $resizeHandle,
           dragHandler: (ev) => {
-            $resizeHandle.classList.add("-grabbing");
+            $resizeHandle.classList.add("-dragging");
 
             // @ts-ignore: It surely exists!!!
             const delta = this.#viewer.viewport.deltaPointsFromPixels(ev.delta);
@@ -228,7 +228,7 @@ export class Annotation {
             this.#viewer.updateOverlay(this.#hostElement, nextLoc);
           },
           dragEndHandler: () => {
-            $resizeHandle.classList.remove("-grabbing");
+            $resizeHandle.classList.remove("-dragging");
             this.#notify("resizeHandle:dragEnd");
           },
         }),
