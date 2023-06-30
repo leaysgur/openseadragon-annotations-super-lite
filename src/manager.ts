@@ -181,6 +181,10 @@ export class AnnotationManager {
       data: annotation.toJSON(),
     });
 
+    this.#notify({
+      type: "annotation:selected",
+      data: { id },
+    });
     this.#selectAnnotation(id);
   };
 
