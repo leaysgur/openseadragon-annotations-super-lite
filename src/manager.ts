@@ -118,19 +118,25 @@ export class AnnotationManager {
 
     switch (type) {
       case "removeHandle:click": {
+        if (annotation.selected)
+          this.#notify({
+            type: "annotation:deselected",
+            data: null,
+          });
+
+        this.#deleteAnnotation(id);
         this.#notify({
           type: "annotation:removed",
           data: annotation.toJSON(),
         });
-        this.#deleteAnnotation(id);
         break;
       }
       case "host:click": {
+        this.#selectAnnotation(id);
         this.#notify({
           type: "annotation:selected",
           data: { id },
         });
-        this.#selectAnnotation(id);
         break;
       }
       case "resizeHandle:dragEnd": {
@@ -155,7 +161,7 @@ export class AnnotationManager {
       return;
     }
 
-    // Just deselect it if annotation is selected
+    // Just deselect if any annotation is selected
     if ([...this.#annotations.values()].some((a) => a.selected)) {
       this.#selectAnnotation(null);
       this.#notify({
@@ -181,11 +187,11 @@ export class AnnotationManager {
       data: annotation.toJSON(),
     });
 
+    this.#selectAnnotation(id);
     this.#notify({
       type: "annotation:selected",
       data: { id },
     });
-    this.#selectAnnotation(id);
   };
 
   #onViewerCanvasKey = (ev: CanvasKeyEvent) => {
@@ -196,10 +202,15 @@ export class AnnotationManager {
         for (const [id, annotation] of this.#annotations) {
           if (annotation.selected) {
             this.#notify({
+              type: "annotation:deselected",
+              data: null,
+            });
+
+            this.#deleteAnnotation(id);
+            this.#notify({
               type: "annotation:removed",
               data: { id },
             });
-            this.#deleteAnnotation(id);
           }
         }
         ev.originalEvent.preventDefault();
