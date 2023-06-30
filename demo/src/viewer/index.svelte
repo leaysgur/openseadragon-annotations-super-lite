@@ -94,8 +94,6 @@
             labels: [],
           };
           annotations[data.id] = item;
-          selected = item;
-          draft = { label: "", color: "" };
           break;
         }
         case "annotation:updated": {
@@ -109,8 +107,6 @@
         }
         case "annotation:removed": {
           delete annotations[data.id];
-          if (selected?.id === data.id) selected = null;
-          draft = { label: "", color: "" };
           break;
         }
         case "annotation:selected": {

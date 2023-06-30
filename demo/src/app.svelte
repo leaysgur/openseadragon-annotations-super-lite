@@ -24,9 +24,9 @@
     // XXX: Maybe fetch()
     data = new Promise((resolve) => {
       setTimeout(() => resolve({
-        /* source: "http://openseadragon.github.io/example-images/highsmith/highsmith.dzi", */
-        /* source: "http://clst.multimodal.riken.jp/CLST_ViewerData/EMV_028_161217SEM_RatKidney/DZI_images/DZI_IMAGE.dzi", */
-        source: "https://microdraw.pasteur.fr/bigbrain/bigbrain.dzi",
+        source: "http://openseadragon.github.io/example-images/highsmith/highsmith.dzi",
+        // source: "http://clst.multimodal.riken.jp/CLST_ViewerData/EMV_028_161217SEM_RatKidney/DZI_images/DZI_IMAGE.dzi",
+        // source: "https://microdraw.pasteur.fr/bigbrain/bigbrain.dzi",
         annotations: JSON.parse(localStorage.getItem("OSD-ASL/ANNOTATIONS") ?? "{}"),
       }), 500);
     });
