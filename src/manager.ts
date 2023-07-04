@@ -81,7 +81,12 @@ export class AnnotationManager {
 
     // Activate restored annotations
     for (const annotation of this.#annotations.values()) {
-      annotation.activate();
+      annotation.activate({
+        selectable: true,
+        removable: true,
+        draggable: true,
+        resizable: true,
+      });
     }
 
     return this;
@@ -183,7 +188,12 @@ export class AnnotationManager {
       0.04,
     ];
 
-    const annotation = this.#addAnnotation({ id, location }).activate();
+    const annotation = this.#addAnnotation({ id, location }).activate({
+      selectable: true,
+      removable: true,
+      draggable: true,
+      resizable: true,
+    });
     this.#notify({
       type: "annotation:added",
       data: annotation.toJSON(),

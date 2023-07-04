@@ -104,7 +104,12 @@ export class Annotation {
     return this;
   }
 
-  activate() {
+  activate(options: {
+    selectable: boolean;
+    removable: boolean;
+    draggable: boolean;
+    resizable: boolean;
+  }) {
     const overlay = this.#viewer.getOverlayById(this.#id);
     this.#mouseTrackers.set(
       "overlay",
@@ -113,126 +118,140 @@ export class Annotation {
         //
         // SELECT
         //
-        clickHandler: (ev) => {
-          // @ts-ignore: It surely exists!!!
-          if (!ev.quick) {
-            return;
-          }
+        clickHandler: options.selectable
+          ? (ev) => {
+              // @ts-ignore: It surely exists!!!
+              if (!ev.quick) {
+                return;
+              }
 
-          this.#notify("host:click");
-        },
+              this.#notify("host:click");
+            }
+          : undefined,
 
         //
         // DRAG
         //
-        dragHandler: (ev) => {
-          this.#hostElement.classList.add("-dragging");
+        dragHandler: options.draggable
+          ? (ev) => {
+              this.#hostElement.classList.add("-dragging");
 
-          // @ts-ignore: It surely exists!!!
-          const delta = this.#viewer.viewport.deltaPointsFromPixels(ev.delta);
-          const loc = overlay.getBounds(this.#viewer.viewport);
+              const delta = this.#viewer.viewport.deltaPointsFromPixels(
+                // @ts-ignore: It surely exists!!!
+                ev.delta,
+              );
+              const loc = overlay.getBounds(this.#viewer.viewport);
 
-          const nextLoc = loc.translate(delta);
+              const nextLoc = loc.translate(delta);
 
-          this.#location = nextLoc;
-          this.#viewer.updateOverlay(this.#hostElement, nextLoc);
-        },
+              this.#location = nextLoc;
+              this.#viewer.updateOverlay(this.#hostElement, nextLoc);
+            }
+          : undefined,
         // XXX: Should double check on releaseHandler?
-        dragEndHandler: () => {
-          this.#hostElement.classList.remove("-dragging");
-          this.#notify("host:dragEnd");
-        },
+        dragEndHandler: options.draggable
+          ? () => {
+              this.#hostElement.classList.remove("-dragging");
+              this.#notify("host:dragEnd");
+            }
+          : undefined,
       }),
     );
 
     //
     // REMOVE
     //
-    const $removeHandle = document.createElement("div");
-    Object.assign($removeHandle, {
-      className: `${BASE_CLASSNAME}-remove-handle`,
-    });
-    this.#hostElement.append($removeHandle);
+    if (options.removable) {
+      const $removeHandle = document.createElement("div");
+      Object.assign($removeHandle, {
+        className: `${BASE_CLASSNAME}-remove-handle`,
+      });
+      this.#hostElement.append($removeHandle);
 
-    this.#mouseTrackers.set(
-      "removeHandle",
-      new OpenSeadragon.MouseTracker({
-        element: $removeHandle,
-        clickHandler: (ev) => {
-          // @ts-ignore: It surely exists!!!
-          if (!ev.quick) {
-            return;
-          }
+      this.#mouseTrackers.set(
+        "removeHandle",
+        new OpenSeadragon.MouseTracker({
+          element: $removeHandle,
+          clickHandler: (ev) => {
+            // @ts-ignore: It surely exists!!!
+            if (!ev.quick) {
+              return;
+            }
 
-          this.#notify("removeHandle:click");
-        },
-      }),
-    );
+            this.#notify("removeHandle:click");
+          },
+        }),
+      );
+    }
 
     //
     // RESIZE
     //
-    const $resizeHandles: [string, HTMLDivElement][] = [
-      ["top-left", document.createElement("div")],
-      ["top-right", document.createElement("div")],
-      ["bottom-right", document.createElement("div")],
-      ["bottom-left", document.createElement("div")],
-    ];
+    if (options.resizable) {
+      const $resizeHandles: [string, HTMLDivElement][] = [
+        ["top-left", document.createElement("div")],
+        ["top-right", document.createElement("div")],
+        ["bottom-right", document.createElement("div")],
+        ["bottom-left", document.createElement("div")],
+      ];
 
-    for (const [pos, $resizeHandle] of $resizeHandles) {
-      Object.assign($resizeHandle, {
-        className: `${BASE_CLASSNAME}-resize-handle ${BASE_CLASSNAME}-resize-handle-${pos}`,
-      });
-      this.#hostElement.append($resizeHandle);
+      for (const [pos, $resizeHandle] of $resizeHandles) {
+        Object.assign($resizeHandle, {
+          className: `${BASE_CLASSNAME}-resize-handle ${BASE_CLASSNAME}-resize-handle-${pos}`,
+        });
+        this.#hostElement.append($resizeHandle);
 
-      this.#mouseTrackers.set(
-        `resizeHandle:${pos}`,
-        new OpenSeadragon.MouseTracker({
-          element: $resizeHandle,
-          dragHandler: (ev) => {
-            $resizeHandle.classList.add("-dragging");
+        this.#mouseTrackers.set(
+          `resizeHandle:${pos}`,
+          new OpenSeadragon.MouseTracker({
+            element: $resizeHandle,
+            dragHandler: (ev) => {
+              $resizeHandle.classList.add("-dragging");
 
-            // @ts-ignore: It surely exists!!!
-            const delta = this.#viewer.viewport.deltaPointsFromPixels(ev.delta);
-            const loc = overlay.getBounds(this.#viewer.viewport);
+              const delta = this.#viewer.viewport.deltaPointsFromPixels(
+                // @ts-ignore: It surely exists!!!
+                ev.delta,
+              );
+              const loc = overlay.getBounds(this.#viewer.viewport);
 
-            const nextLoc = loc.clone();
-            switch (pos) {
-              case "top-left": {
-                nextLoc.x = loc.x + delta.x;
-                nextLoc.y = loc.y + delta.y;
-                nextLoc.width = loc.width - delta.x;
-                nextLoc.height = loc.height - delta.y;
-                break;
+              const nextLoc = loc.clone();
+              switch (pos) {
+                case "top-left": {
+                  nextLoc.x = loc.x + delta.x;
+                  nextLoc.y = loc.y + delta.y;
+                  nextLoc.width = loc.width - delta.x;
+                  nextLoc.height = loc.height - delta.y;
+                  break;
+                }
+                case "top-right": {
+                  nextLoc.y = loc.y + delta.y;
+                  nextLoc.width = loc.width + delta.x;
+                  nextLoc.height = loc.height - delta.y;
+                  break;
+                }
+                case "bottom-right": {
+                  nextLoc.width = loc.width + delta.x;
+                  nextLoc.height = loc.height + delta.y;
+                  break;
+                }
+                case "bottom-left": {
+                  nextLoc.x = loc.x + delta.x;
+                  nextLoc.width = loc.width - delta.x;
+                  nextLoc.height = loc.height + delta.y;
+                  break;
+                }
               }
-              case "top-right": {
-                nextLoc.y = loc.y + delta.y;
-                nextLoc.width = loc.width + delta.x;
-                nextLoc.height = loc.height - delta.y;
-                break;
-              }
-              case "bottom-right": {
-                nextLoc.width = loc.width + delta.x;
-                nextLoc.height = loc.height + delta.y;
-                break;
-              }
-              case "bottom-left": {
-                nextLoc.x = loc.x + delta.x;
-                nextLoc.width = loc.width - delta.x;
-                nextLoc.height = loc.height + delta.y;
-                break;
-              }
-            }
 
-            this.#location = nextLoc;
-            this.#viewer.updateOverlay(this.#hostElement, nextLoc);
-          },
-          dragEndHandler: () => {
-            $resizeHandle.classList.remove("-dragging");
-            this.#notify("resizeHandle:dragEnd");
-          },
-        }),
-      );
+              this.#location = nextLoc;
+              this.#viewer.updateOverlay(this.#hostElement, nextLoc);
+            },
+            dragEndHandler: () => {
+              $resizeHandle.classList.remove("-dragging");
+              this.#notify("resizeHandle:dragEnd");
+            },
+          }),
+        );
+      }
     }
 
     return this;
