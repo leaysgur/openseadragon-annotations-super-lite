@@ -29,7 +29,7 @@ export type AnnotationEvent =
   | AnnotationSelectedEvent
   | AnnotationDeselectedEvent;
 
-export type ManagerOptions = typeof defaultManagerOptions;
+export type ManagerOptions = Partial<typeof defaultManagerOptions>;
 
 const defaultManagerOptions = {
   channelName: "osdasl",
@@ -37,14 +37,14 @@ const defaultManagerOptions = {
 
 export class AnnotationManager {
   #viewer: Viewer;
-  #options: ManagerOptions;
+  #options: typeof defaultManagerOptions;
   #notify: (event: AnnotationEvent) => void;
   // ↑ UserApp <- AnnotationManager
   // ↓            AnnotationManager <- Annotations
   #channel = new MessageChannel();
   #annotations: Map<string, Annotation> = new Map();
 
-  constructor(viewer: Viewer, options: ManagerOptions) {
+  constructor(viewer: Viewer, options?: ManagerOptions) {
     this.#viewer = viewer;
     this.#options = { ...defaultManagerOptions, ...options };
 
@@ -110,7 +110,9 @@ export class AnnotationManager {
 
   #onAnnotationNotifyMessage = ({
     data: { type, id },
-  }: { data: NotifyMessage }) => {
+  }: {
+    data: NotifyMessage;
+  }) => {
     const annotation = this.#annotations.get(id);
     if (!annotation) {
       return;
