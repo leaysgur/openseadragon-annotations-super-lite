@@ -55,6 +55,10 @@ import { AnnotationsSuperLite, type AnnotationEvent } from "openseadragon-annota
 const viewer = new OpenSeadragon.Viewer({ /* ... */ });
 const myAnno = new AnnotationsSuperLite(viewer, { channelName: "osdasl" });
 
+// [Optional] Set annotation behavior
+myAnno.setAnnotationOptions({
+  activate: { selectable: true, removable: true, resizable: false, draggable: false },
+});
 
 // [Optional] Restore previous annotations
 const annotations = [{
@@ -64,7 +68,7 @@ const annotations = [{
 myAnno.restore(annotations);
 
 // [Optional] Register event handlers
-myAnno.activate();
+myAnno.activate({ clickToAdd: true, keyboardShortcut: false });
 
 // [Optional] Communicate with plugin via BroadcastChannel API
 const channel = new BroadcastChannel("osdasl");

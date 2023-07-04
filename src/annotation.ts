@@ -15,6 +15,13 @@ export type NotifyMessage = {
   id: string;
 };
 
+export type AnnotationActivateOptions = {
+  selectable: boolean;
+  removable: boolean;
+  draggable: boolean;
+  resizable: boolean;
+};
+
 const BASE_CLASSNAME = "osdasl";
 
 export class Annotation {
@@ -104,12 +111,7 @@ export class Annotation {
     return this;
   }
 
-  activate(options: {
-    selectable: boolean;
-    removable: boolean;
-    draggable: boolean;
-    resizable: boolean;
-  }) {
+  activate(options: AnnotationActivateOptions) {
     const overlay = this.#viewer.getOverlayById(this.#id);
     this.#mouseTrackers.set(
       "overlay",

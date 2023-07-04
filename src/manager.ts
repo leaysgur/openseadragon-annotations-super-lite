@@ -1,6 +1,10 @@
 import { Annotation } from "./annotation";
 import type { Viewer, CanvasClickEvent, CanvasKeyEvent } from "openseadragon";
-import type { AnnotationInit, NotifyMessage } from "./annotation";
+import type {
+  AnnotationInit,
+  AnnotationActivateOptions,
+  NotifyMessage,
+} from "./annotation";
 
 type AnnotationAddedEvent = {
   type: "annotation:added";
@@ -29,27 +33,63 @@ export type AnnotationEvent =
   | AnnotationSelectedEvent
   | AnnotationDeselectedEvent;
 
-export type ManagerOptions = Partial<typeof defaultManagerOptions>;
-
 const defaultManagerOptions = {
   channelName: "osdasl",
+};
+const defaultAnnotationOptions = {
+  activate: {
+    selectable: true,
+    removable: true,
+    draggable: true,
+    resizable: true,
+  },
 };
 
 export class AnnotationManager {
   #viewer: Viewer;
   #options: typeof defaultManagerOptions;
+  #annotationOptions: typeof defaultAnnotationOptions =
+    defaultAnnotationOptions;
   #notify: (event: AnnotationEvent) => void;
   // ↑ UserApp <- AnnotationManager
   // ↓            AnnotationManager <- Annotations
   #channel = new MessageChannel();
   #annotations: Map<string, Annotation> = new Map();
+  #disposers: (() => void)[] = [];
 
-  constructor(viewer: Viewer, options?: ManagerOptions) {
+  constructor(viewer: Viewer, options?: { channelName?: string }) {
     this.#viewer = viewer;
-    this.#options = { ...defaultManagerOptions, ...options };
+    this.#options = {
+      ...defaultManagerOptions,
+      ...options,
+    };
 
     const events = new BroadcastChannel(this.#options.channelName);
     this.#notify = (event) => events.postMessage(event);
+
+    this.#channel.port1.onmessage = this.#onAnnotationNotifyMessage;
+    this.#disposers.push(() => {
+      this.#channel.port1.onmessage = null;
+      this.#channel.port1.close();
+      this.#channel.port2.onmessage = null;
+      this.#channel.port2.close();
+    });
+  }
+
+  // Does not affect already existing annotations
+  setAnnotationOptions(options: {
+    activate?: Partial<AnnotationActivateOptions>;
+  }) {
+    this.#annotationOptions = {
+      // ...this.#annotationActivateOptions,
+      // ...options,
+      activate: {
+        ...this.#annotationOptions.activate,
+        ...options.activate,
+      },
+    };
+
+    return this;
   }
 
   restore(inits: AnnotationInit[]) {
@@ -57,35 +97,49 @@ export class AnnotationManager {
       if (!init) {
         continue;
       }
+
       this.#addAnnotation(init);
     }
 
     return this;
   }
 
-  activate() {
-    // Disable it for click-to-add-overlay
-    for (const type of ["mouse", "touch", "pen", "unknown"]) {
-      this.#viewer.gestureSettingsByDeviceType(type).clickToZoom = false;
+  activate(options?: {
+    clickToAdd?: boolean;
+    enableKeyboardShortcut?: boolean;
+  }) {
+    const activateOptions = {
+      ...{ clickToAdd: true, enableKeyboardShortcut: true },
+      ...options,
+    };
+
+    if (activateOptions.clickToAdd) {
+      // Disable it for click-to-add-overlay
+      for (const type of ["mouse", "touch", "pen", "unknown"]) {
+        this.#viewer.gestureSettingsByDeviceType(type).clickToZoom = false;
+      }
+      // Click to add overlay
+      this.#viewer.addHandler("canvas-click", this.#onViewerCanvasClick);
+
+      this.#disposers.push(() => {
+        for (const type of ["mouse", "touch", "pen", "unknown"]) {
+          this.#viewer.gestureSettingsByDeviceType(type).clickToZoom = true;
+        }
+        this.#viewer.removeHandler("canvas-click", this.#onViewerCanvasClick);
+      });
     }
-    // Click to add overlay
-    this.#viewer.addHandler("canvas-click", this.#onViewerCanvasClick);
 
-    // Keyboard shortcut
-    this.#viewer.addHandler("canvas-key", this.#onViewerCanvasKey);
-    // CanvasKeyEvent is only fired when focused
-    this.#viewer.addHandler("canvas-enter", this.#onViewerCanvasEnter);
-    this.#viewer.addHandler("canvas-exit", this.#onViewerCanvasExit);
+    if (activateOptions.enableKeyboardShortcut) {
+      // Keyboard shortcut
+      this.#viewer.addHandler("canvas-key", this.#onViewerCanvasKey);
+      // CanvasKeyEvent is only fired when focused
+      this.#viewer.addHandler("canvas-enter", this.#onViewerCanvasEnter);
+      this.#viewer.addHandler("canvas-exit", this.#onViewerCanvasExit);
 
-    this.#channel.port1.onmessage = this.#onAnnotationNotifyMessage;
-
-    // Activate restored annotations
-    for (const annotation of this.#annotations.values()) {
-      annotation.activate({
-        selectable: true,
-        removable: true,
-        draggable: true,
-        resizable: true,
+      this.#disposers.push(() => {
+        this.#viewer.removeHandler("canvas-key", this.#onViewerCanvasKey);
+        this.#viewer.removeHandler("canvas-enter", this.#onViewerCanvasEnter);
+        this.#viewer.removeHandler("canvas-exit", this.#onViewerCanvasExit);
       });
     }
 
@@ -93,24 +147,14 @@ export class AnnotationManager {
   }
 
   destroy() {
-    this.#channel.port1.onmessage = null;
-    this.#channel.port1.close();
-    this.#channel.port2.onmessage = null;
-    this.#channel.port2.close();
+    for (const dispose of this.#disposers) {
+      dispose();
+    }
 
     for (const annotation of this.#annotations.values()) {
       annotation.destroy();
     }
     this.#annotations.clear();
-
-    for (const type of ["mouse", "touch", "pen", "unknown"]) {
-      this.#viewer.gestureSettingsByDeviceType(type).clickToZoom = true;
-    }
-    this.#viewer.removeHandler("canvas-click", this.#onViewerCanvasClick);
-
-    this.#viewer.removeHandler("canvas-key", this.#onViewerCanvasKey);
-    this.#viewer.removeHandler("canvas-enter", this.#onViewerCanvasEnter);
-    this.#viewer.removeHandler("canvas-exit", this.#onViewerCanvasExit);
   }
 
   #onAnnotationNotifyMessage = ({
@@ -188,12 +232,7 @@ export class AnnotationManager {
       0.04,
     ];
 
-    const annotation = this.#addAnnotation({ id, location }).activate({
-      selectable: true,
-      removable: true,
-      draggable: true,
-      resizable: true,
-    });
+    const annotation = this.#addAnnotation({ id, location });
     this.#notify({
       type: "annotation:added",
       data: annotation.toJSON(),
@@ -249,7 +288,10 @@ export class AnnotationManager {
         port: this.#channel.port2,
       },
       init,
-    ).render();
+    )
+      .render()
+      .activate(this.#annotationOptions.activate);
+
     this.#annotations.set(init.id, annotation);
 
     return annotation;
