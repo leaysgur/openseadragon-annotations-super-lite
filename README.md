@@ -94,7 +94,7 @@ myAnno.destroy();
 viewer.destroy();
 ```
 
-See also [demo](https://leader22.github.io/openseadragon-annotations-super-lite/) and it's [code](https://github.com/leader22/openseadragon-annotations-super-lite/blob/main/demo/src/viewer/index.svelte).
+See also [demo](https://leaysgur.github.io/openseadragon-annotations-super-lite/) and it's [code](https://github.com/leaysgur/openseadragon-annotations-super-lite/blob/main/demo/src/viewer/index.svelte).
 
 This demo using Svelte for client UI, but plugin itself does not require any deps.
 
