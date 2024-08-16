@@ -64,6 +64,9 @@ myAnno.setAnnotationOptions({
 const annotations = [{
   id: "osdasl_1675845237828",
   location: [0, 0, 0.04, 0.04],
+  // [Optional] Display content inside the annotation
+  // WARNING: Use only for trusted content and never for user-provided content.
+  child: `<svg>...</svg>`
 }]
 myAnno.restore(annotations);
 
