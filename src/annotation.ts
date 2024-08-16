@@ -1,5 +1,5 @@
 import OpenSeadragon from "openseadragon";
-import type { Viewer, Rect, MouseTracker } from "openseadragon";
+import type { MouseTracker, Rect, Viewer } from "openseadragon";
 
 export type AnnotationInit = {
   id: string;
@@ -52,7 +52,7 @@ export class Annotation {
     this.#notify = (type) => port.postMessage({ type, id });
 
     if (child) {
-      let childElement = document.createElement("div");
+      const childElement = document.createElement("div");
       childElement.innerHTML = child;
 
       Object.assign(childElement, {
