@@ -45,6 +45,11 @@ npm i openseadragon-annotations-super-lite
 
 TypeScript definitions are included. ✌️
 
+> [!CAUTION]
+> We are using `requestIdleCallback` api, but it's not supported by Safari.
+> Please install polyfill if needed.
+> https://caniuse.com/requestidlecallback
+
 ## Usage
 
 ```ts
