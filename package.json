@@ -27,17 +27,17 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/leader22/openseadragon-annotations-super-lite.git"
+    "url": "git+https://github.com/leaysgur/openseadragon-annotations-super-lite.git"
   },
   "bugs": {
-    "url": "https://github.com/leader22/openseadragon-annotations-super-lite/issues"
+    "url": "https://github.com/leaysgur/openseadragon-annotations-super-lite/issues"
   },
-  "homepage": "https://github.com/leader22/openseadragon-annotations-super-lite#readme",
+  "homepage": "https://github.com/leaysgur/openseadragon-annotations-super-lite#readme",
   "devDependencies": {
     "@types/openseadragon": "^3.0.10",
     "microbundle": "^0.15.1"
   },
   "peerDependencies": {
-    "openseadragon": "^3.0.0 || ^4.0.0"
+    "openseadragon": "^3.0.0 || ^4.0.0 || ^5.0.0"
   }
 }
