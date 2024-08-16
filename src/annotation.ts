@@ -52,7 +52,14 @@ export class Annotation {
     this.#notify = (type) => port.postMessage({ type, id });
 
     if (child) {
-      this.#hostElement.innerHTML = child;
+      let childElement = document.createElement("div");
+      childElement.innerHTML = child;
+
+      Object.assign(childElement, {
+        className: `${BASE_CLASSNAME}-child`,
+      });
+
+      this.#hostElement.append(childElement);
     }
   }
 
