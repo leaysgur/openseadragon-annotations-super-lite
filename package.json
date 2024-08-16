@@ -15,8 +15,8 @@
     "dist"
   ],
   "scripts": {
-    "lint": "npx rome check . --apply-suggested",
-    "format": "npx rome format . --write",
+    "lint": "npx @biomejs/biome check ./src --fix",
+    "format": "npx @biomejs/biome format ./src --write",
     "build": "microbundle ./src/index.ts"
   },
   "keywords": [

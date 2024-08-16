@@ -1,8 +1,8 @@
+import type { CanvasClickEvent, CanvasKeyEvent, Viewer } from "openseadragon";
 import { Annotation } from "./annotation";
-import type { Viewer, CanvasClickEvent, CanvasKeyEvent } from "openseadragon";
 import type {
-  AnnotationInit,
   AnnotationActivateOptions,
+  AnnotationInit,
   NotifyMessage,
 } from "./annotation";
 

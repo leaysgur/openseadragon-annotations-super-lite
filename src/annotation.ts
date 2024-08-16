@@ -1,5 +1,5 @@
 import OpenSeadragon from "openseadragon";
-import type { Viewer, Rect, MouseTracker } from "openseadragon";
+import type { MouseTracker, Rect, Viewer } from "openseadragon";
 
 export type AnnotationInit = {
   id: string;
@@ -35,7 +35,10 @@ export class Annotation {
   #mouseTrackers: Map<string, MouseTracker> = new Map();
 
   constructor(
-    { viewer, port }: {
+    {
+      viewer,
+      port,
+    }: {
       viewer: Viewer;
       port: MessagePort;
     },
