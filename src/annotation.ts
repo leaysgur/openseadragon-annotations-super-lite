@@ -1,9 +1,10 @@
 import OpenSeadragon from "openseadragon";
-import type { MouseTracker, Rect, Viewer } from "openseadragon";
+import type { Viewer, Rect, MouseTracker } from "openseadragon";
 
 export type AnnotationInit = {
   id: string;
   location: [x: number, y: number, w: number, h: number];
+  child?: string;
 };
 
 export type NotifyMessage = {
@@ -42,13 +43,17 @@ export class Annotation {
       viewer: Viewer;
       port: MessagePort;
     },
-    { id, location }: AnnotationInit,
+    { id, location, child }: AnnotationInit,
   ) {
     this.#viewer = viewer;
     this.#id = id;
     this.#location = new OpenSeadragon.Rect(...location);
 
     this.#notify = (type) => port.postMessage({ type, id });
+
+    if (child) {
+      this.#hostElement.innerHTML = child;
+    }
   }
 
   get selected() {
